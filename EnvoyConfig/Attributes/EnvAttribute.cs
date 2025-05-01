@@ -5,9 +5,6 @@ namespace EnvoyConfig.Attributes
     /// <summary>
     /// Marks a property for environment variable initialization.
     /// </summary>
-    /// <summary>
-    /// Specifies casing for keys in MapPrefix dictionary parsing.
-    /// </summary>
     public enum MapKeyCasingMode
     {
         /// <summary>Keys are converted to lower-case.</summary>
@@ -20,10 +17,10 @@ namespace EnvoyConfig.Attributes
         AsIs,
     }
 
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     /// <summary>
     /// Attribute to control how environment variables are mapped to config properties.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public sealed class EnvAttribute : Attribute
     {
         /// <summary>

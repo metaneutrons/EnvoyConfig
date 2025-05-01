@@ -4,9 +4,6 @@ using EnvoyConfig.Logging;
 namespace EnvoyConfig;
 
 /// <summary>
-/// Central API for loading environment configuration objects.
-/// </summary>
-/// <summary>
 /// Central API for loading environment configuration objects from environment variables using reflection.
 /// </summary>
 public static class EnvConfig

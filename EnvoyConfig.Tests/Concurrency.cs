@@ -15,7 +15,7 @@ public class Concurrency
     }
 
     [Fact]
-    public void Load_Is_ThreadSafe()
+    public async Task Load_Is_ThreadSafe()
     {
         Environment.SetEnvironmentVariable("CONCUR_INT", "123");
         var tasks = new Task[10];
@@ -27,6 +27,6 @@ public class Concurrency
                 Assert.Equal(123, config.IntValue);
             });
         }
-        Task.WaitAll(tasks);
+        await Task.WhenAll(tasks);
     }
 }

@@ -25,6 +25,7 @@ internal static class ReflectionHelper
     /// <typeparam name="T">The configuration class type to populate.</typeparam>
     /// <param name="logger">Optional logger for warnings and errors.</param>
     /// <param name="globalPrefix">Optional global prefix for all lookups.</param>
+    /// <param name="variables">Optional dictionary of variables to use instead of environment variables.</param>
     /// <returns>The populated configuration object.</returns>
     public static T PopulateInstance<T>(
         IEnvLogSink? logger = null,
