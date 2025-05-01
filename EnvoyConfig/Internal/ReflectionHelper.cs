@@ -5,13 +5,17 @@ using EnvoyConfig.Logging;
 
 namespace EnvoyConfig.Internal;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 /// <summary>
 /// Handles reflection, attribute discovery, and instance population.
 /// </summary>
 /// <summary>
 /// Handles reflection, attribute discovery, and instance population for EnvConfig.
 /// </summary>
-internal static class ReflectionHelper
+public static class ReflectionHelper
 {
     private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
     private static readonly ConcurrentDictionary<Type, List<(PropertyInfo, EnvAttribute)>> _envPropCache = new();
@@ -57,7 +61,8 @@ internal static class ReflectionHelper
                     var str = Environment.GetEnvironmentVariable(envKey);
                     if (string.IsNullOrEmpty(str) && attr.Default != null)
                     {
-                        str = attr.Default;
+                        // Support non-string Default values
+                        str = attr.Default is string s ? s : attr.Default.ToString();
                         if (variables != null && str != null)
                         {
                             foreach (var kv in variables)
@@ -75,17 +80,37 @@ internal static class ReflectionHelper
                     var str = Environment.GetEnvironmentVariable(envKey);
                     if ((str == null || str == "") && attr.Default != null)
                     {
-                        str = attr.Default;
-                        if (variables != null && str != null)
+                        // If Default is string, use as-is; else, use ToString() for conversion
+                        var defaultObj = attr.Default;
+                        if (defaultObj is string s)
                         {
-                            foreach (var kv in variables)
+                            str = s;
+                            if (variables != null && str != null)
                             {
-                                str = str.Replace($"{{{kv.Key}}}", kv.Value);
+                                foreach (var kv in variables)
+                                {
+                                    str = str.Replace($"{{{kv.Key}}}", kv.Value);
+                                }
+                            }
+                            value = ConvertToType(str, prop.PropertyType, logger, envKey);
+                        }
+                        else
+                        {
+                            // If already the correct type, assign directly
+                            if (defaultObj != null && prop.PropertyType.IsInstanceOfType(defaultObj))
+                            {
+                                value = defaultObj;
+                            }
+                            else
+                            {
+                                value = ConvertToType(defaultObj?.ToString(), prop.PropertyType, logger, envKey);
                             }
                         }
                     }
-
-                    value = ConvertToType(str, prop.PropertyType, logger, envKey);
+                    else
+                    {
+                        value = ConvertToType(str, prop.PropertyType, logger, envKey);
+                    }
                 }
                 // Numbered List
                 else if (!string.IsNullOrEmpty(attr.ListPrefix))
