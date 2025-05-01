@@ -3,6 +3,9 @@ using Xunit;
 
 namespace EnvoyConfig.Tests;
 
+using System;
+using System.Collections.Generic;
+
 [Collection("NonParallel")]
 public class NestedListDefaultIndex
 {

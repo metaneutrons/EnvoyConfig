@@ -3,6 +3,8 @@ using NLog;
 
 namespace EnvoyConfig.Adapters.NLog
 {
+    using System;
+
     public class NLogLoggerAdapter : IEnvLogSink
     {
         private readonly Logger _logger;

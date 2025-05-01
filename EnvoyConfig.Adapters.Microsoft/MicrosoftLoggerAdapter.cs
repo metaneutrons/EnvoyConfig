@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 
 namespace EnvoyConfig.Adapters.Microsoft
 {
+    using System;
+
     public class MicrosoftLoggerAdapter : IEnvLogSink
     {
         private readonly ILogger _logger;

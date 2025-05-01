@@ -3,6 +3,8 @@ using Xunit;
 
 namespace EnvoyConfig.Tests;
 
+using System;
+
 public class DirectKey
 {
     public class DirectKeyConfig

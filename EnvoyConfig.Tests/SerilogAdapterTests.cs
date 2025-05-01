@@ -5,6 +5,8 @@ using Xunit;
 
 namespace EnvoyConfig.Tests;
 
+using System.Collections.Generic;
+
 public class SerilogAdapterTests
 {
     [Fact]

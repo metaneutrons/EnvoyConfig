@@ -3,6 +3,9 @@ using Xunit;
 
 namespace EnvoyConfig.Tests;
 
+using System;
+using System.Threading.Tasks;
+
 public class Concurrency
 {
     public class ConcurrencyConfig

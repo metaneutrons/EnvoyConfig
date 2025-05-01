@@ -3,6 +3,9 @@ using Xunit;
 
 namespace EnvoyConfig.Tests;
 
+using System;
+using System.Collections.Generic;
+
 public class MicrosoftLoggingAdapterTests
 {
     [Fact]

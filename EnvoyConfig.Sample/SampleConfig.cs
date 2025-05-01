@@ -2,6 +2,8 @@ using EnvoyConfig.Attributes;
 
 namespace EnvoyConfig.Sample;
 
+using System.Collections.Generic;
+
 public class SampleConfig
 {
     [Env(Key = "ENVIRONMENT", Default = "Development")]

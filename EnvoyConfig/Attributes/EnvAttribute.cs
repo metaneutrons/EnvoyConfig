@@ -1,5 +1,7 @@
 namespace EnvoyConfig.Attributes
 {
+    using System;
+
     /// <summary>
     /// Marks a property for environment variable initialization.
     /// </summary>
@@ -27,9 +29,9 @@ namespace EnvoyConfig.Attributes
         public string? Key { get; set; }
 
         /// <summary>
-        /// The default value to use if the environment variable is not set.
+        /// The default value to use if the environment variable is not set. Can be string, int, bool, etc.
         /// </summary>
-        public string? Default { get; set; }
+        public object? Default { get; set; }
 
         /// <summary>
         /// If true, parses the value as a list (comma-separated by default).

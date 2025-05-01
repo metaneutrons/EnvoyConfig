@@ -3,6 +3,8 @@ using Xunit;
 
 namespace EnvoyConfig.Tests;
 
+using System;
+
 public class EdgeCases
 {
     public class EdgeConfig

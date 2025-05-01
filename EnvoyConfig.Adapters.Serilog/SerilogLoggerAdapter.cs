@@ -3,6 +3,8 @@ using Serilog;
 
 namespace EnvoyConfig.Adapters.Serilog
 {
+    using System;
+
     public class SerilogLoggerAdapter : IEnvLogSink
     {
         private readonly ILogger _logger;
