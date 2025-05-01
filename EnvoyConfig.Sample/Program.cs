@@ -97,6 +97,29 @@ class Program
         // Snapcast configuration as key-value map
         PrintSection("Snapcast", "🎵", config.Snapcast.Select(kv => ($"{kv.Key}", kv.Value)).ToArray());
 
+        // Print all MQTT zone configs
+        if (config.ZonesMqtt != null && config.ZonesMqtt.Count > 0)
+        {
+            int idx = 1;
+            foreach (var zone in config.ZonesMqtt)
+            {
+                PrintSection($"MQTT Zone {idx}", "📡", new[] {
+                    ("Control Set Topic", zone.ControlSetTopic),
+                    ("Track Set Topic", zone.TrackSetTopic),
+                    ("Playlist Set Topic", zone.PlaylistSetTopic),
+                    ("Volume Set Topic", zone.VolumeSetTopic),
+                    ("Mute Set Topic", zone.MuteSetTopic),
+                    ("Control Topic", zone.ControlTopic),
+                    ("Track Topic", zone.TrackTopic),
+                    ("Playlist Topic", zone.PlaylistTopic),
+                    ("Volume Topic", zone.VolumeTopic),
+                    ("Mute Topic", zone.MuteTopic),
+                    ("State Topic", zone.StateTopic)
+                });
+                idx++;
+            }
+        }
+
         AnsiConsole.Write(new Rule("[green]✔ Ready![/]").RuleStyle("green"));
         AnsiConsole.MarkupLine("[italic grey]Tip: Edit sample.env and rerun to see changes instantly![/]");
     }

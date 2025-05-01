@@ -53,4 +53,8 @@ public class SampleConfig
     // Snapcast configuration as a map
     [Env(MapPrefix = "SNAPCAST_")]
     public Dictionary<string, string> Snapcast { get; set; } = new();
+
+    // List of MQTT zone configs
+    [Env(NestedListPrefix = "ZONE_", NestedListSuffix = "_MQTT_")]
+    public List<SampleZoneMqttConfig> ZonesMqtt { get; set; } = new();
 }

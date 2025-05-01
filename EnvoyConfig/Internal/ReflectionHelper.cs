@@ -94,6 +94,11 @@ internal static class ReflectionHelper
                         value = nested;
                     }
                 }
+                // List of nested objects (NestedListPrefix/NestedListSuffix)
+                else if (!string.IsNullOrEmpty(attr.NestedListPrefix) && !string.IsNullOrEmpty(attr.NestedListSuffix))
+                {
+                    value = ParseNestedList(prefix, attr, prop.PropertyType, logger);
+                }
                 if (value != null)
                 {
                     prop.SetValue(instance, value);
@@ -301,4 +306,44 @@ internal static class ReflectionHelper
         }
         return dict;
     }
+
+    // Helper for parsing a list of nested objects from env vars with numbered prefixes
+    private static object? ParseNestedList(string globalPrefix, EnvAttribute attr, Type listType, IEnvLogSink? logger)
+    {
+        // Only works for List<T>
+        if (!listType.IsGenericType || listType.GetGenericTypeDefinition() != typeof(List<>))
+            throw new InvalidOperationException("NestedListPrefix only supported for List<T>");
+        var elemType = listType.GenericTypeArguments[0];
+        var envVars = Environment.GetEnvironmentVariables();
+        var prefix = globalPrefix + (attr.NestedListPrefix ?? "");
+        var suffix = attr.NestedListSuffix ?? "";
+        // Find all keys like SNAPDOG_ZONE_1_MQTT_*
+        var indices = new HashSet<string>();
+        foreach (System.Collections.DictionaryEntry e in envVars)
+        {
+            if (e.Key is string k && k.StartsWith(prefix) && k.Contains(suffix))
+            {
+                var rest = k.Substring(prefix.Length);
+                var idxEnd = rest.IndexOf(suffix);
+                if (idxEnd > 0)
+                {
+                    var idx = rest.Substring(0, idxEnd);
+                    indices.Add(idx);
+                }
+            }
+        }
+        var list = (System.Collections.IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elemType))!;
+        foreach (var idx in indices.OrderBy(i => i))
+        {
+            // Compose prefix for this nested object
+            var nestedPrefix = prefix + idx + suffix;
+            var nested = typeof(ReflectionHelper)
+                .GetMethod(nameof(PopulateInstance), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)!
+                .MakeGenericMethod(elemType)
+                .Invoke(null, new object?[] { logger, nestedPrefix });
+            list.Add(nested);
+        }
+        return list;
+    }
 }
+
