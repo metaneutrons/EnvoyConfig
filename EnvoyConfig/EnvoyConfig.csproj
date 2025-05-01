@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AssemblyName>EnvoyConfig</AssemblyName>
+    <Description>Runtime reflection-based environment variable configuration loader for .NET 8</Description>
+    <PackageTags>configuration;environment;reflection;dotnet;envoy</PackageTags>
+    <Authors>Fabian Schmieder</Authors>
+    <Company>metaneutrons</Company>
+    <Copyright>GPL-3.0-or-later</Copyright>
+  </PropertyGroup>
+</Project>

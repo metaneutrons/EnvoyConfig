@@ -98,7 +98,7 @@ Adherence to standard .NET coding conventions and modern best practices is expec
 
 ## 3. Project Structure (Flat, Merged)
 
-All projects reside directly under the main solution root directory. The `Abstractions` project is removed, and its contents are merged into `EnvoyConfig`.
+All projects reside directly under the main solution root directory.
 
 ### 3.1. ASCII Tree Diagram
 
@@ -363,375 +363,6 @@ This section details the purpose, key files, dependencies, and implementation no
         }
         ```
 
-  * **`Internal/ReflectionHelper.cs`:** (Namespace: `EnvoyConfig.Internal`)
-    * **Purpose:** Encapsulates the core reflection logic for finding attributes, reading environment variables, parsing values, handling different modes (Key, Lists, Map, Nested), and setting properties.
-    * **Implementation Sketch:**
-
-            ```csharp
-            using EnvoyConfig.Attributes;
-            using EnvoyConfig.Logging;
-            using System;
-            using System.Collections;
-            using System.Collections.Generic;
-            using System.ComponentModel;
-            using System.Globalization;
-            using System.Linq;
-            using System.Reflection;
-
-            internal static class ReflectionHelper
-            {
-                // Main entry point called by EnvConfig.Load
-                public static void PopulateInstance<T>(T instance, string effectivePrefix, IEnvLogSink? logger, EnvLogLevel configuredLogLevel)
-                {
-                    if (instance == null) return; // Should not happen if called from Load<T> where T:new()
-
-                    var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                                            .Where(p => p.CanWrite); // Only consider properties with a public setter
-
-                    foreach (var propInfo in properties)
-                    {
-                        var envAttr = propInfo.GetCustomAttribute<EnvAttribute>();
-                        if (envAttr == null) continue; // Skip properties without the attribute
-
-                        // --- Runtime Validation of Attribute Usage ---
-                        int modeCount = (envAttr.Key != null ? 1 : 0) +
-                                        (envAttr.ListPrefix != null ? 1 : 0) +
-                                        (envAttr.MapPrefix != null ? 1 : 0) +
-                                        (envAttr.NestedPrefix != null ? 1 : 0);
-
-                        if (modeCount != 1)
-                        {
-                            Log(logger, configuredLogLevel, EnvLogLevel.Error, $"Invalid [Env] attribute on {typeof(T).Name}.{propInfo.Name}. Specify exactly one of Key, ListPrefix, MapPrefix, or NestedPrefix.", null);
-                            continue; // Skip this property
-                        }
-
-                        // --- Mode Dispatch ---
-                        try
-                        {
-                            if (envAttr.Key != null)
-                            {
-                                ProcessKeyMode(instance, propInfo, envAttr, effectivePrefix, logger, configuredLogLevel);
-                            }
-                            else if (envAttr.ListPrefix != null)
-                            {
-                                ProcessNumberedListMode(instance, propInfo, envAttr, effectivePrefix, logger, configuredLogLevel);
-                            }
-                            else if (envAttr.MapPrefix != null)
-                            {
-                                ProcessMapMode(instance, propInfo, envAttr, effectivePrefix, logger, configuredLogLevel);
-                            }
-                            else // NestedPrefix must be non-null
-                            {
-                                ProcessNestedMode(instance, propInfo, envAttr, effectivePrefix, logger, configuredLogLevel);
-                            }
-                        }
-                        catch (Exception ex) // Catch errors during processing for a single property
-                        {
-                             Log(logger, configuredLogLevel, EnvLogLevel.Error, $"Error processing property {typeof(T).Name}.{propInfo.Name}: {ex.Message}", ex);
-                             // Continue processing other properties
-                        }
-                    }
-                }
-
-                // --- Mode Processing Methods (Example Stubs) ---
-
-                private static void ProcessKeyMode(object instance, PropertyInfo propInfo, EnvAttribute attr, string prefix, IEnvLogSink? logger, EnvLogLevel configLevel)
-                {
-                    // Validate IsList type compatibility
-                    bool isListMode = attr.IsList;
-                    Type propType = propInfo.PropertyType;
-                    bool isGenericList = propType.IsGenericType && propType.GetGenericTypeDefinition() == typeof(List<>);
-                    bool isArray = propType.IsArray && propType.GetArrayRank() == 1;
-
-                    if (isListMode && !(isGenericList || isArray)) {
-                        Log(logger, configLevel, EnvLogLevel.Error, $"[Env(IsList=true)] requires List<T> or T[] type for property {instance.GetType().Name}.{propInfo.Name}, but found {propType.Name}.", null);
-                        return;
-                    }
-                     if (!isListMode && (isGenericList || isArray)) {
-                        // Maybe allow direct key mapping to a single-element list/array? Or log error? For now, log error.
-                         Log(logger, configLevel, EnvLogLevel.Error, $"[Env(Key=...)] without IsList=true cannot be applied to List<T> or T[] property {instance.GetType().Name}.{propInfo.Name}. Use IsList=true for comma-separated value or ListPrefix/MapPrefix.", null);
-                        return;
-                    }
-
-                    string fullKey = string.IsNullOrEmpty(prefix) ? attr.Key! : $"{prefix}{attr.Key!}";
-                    string? envValue = Environment.GetEnvironmentVariable(fullKey);
-                    string? valueToParse = envValue;
-                    bool usedDefault = false;
-
-                    if (string.IsNullOrEmpty(envValue) && attr.Default != null)
-                    {
-                        valueToParse = attr.Default;
-                        usedDefault = true;
-                         Log(logger, configLevel, EnvLogLevel.Debug, $"Key '{fullKey}' not found or empty for {propInfo.Name}. Using default value '{valueToParse}'.", null);
-                    }
-
-                    if (valueToParse != null)
-                    {
-                        object? parsedValue = null;
-                        if (isListMode) {
-                            // Logic to split valueToParse by attr.ListSeparator
-                            // Get element type T from List<T> or T[]
-                            // Parse each part into T
-                            // Create List<T> or T[] instance
-                            // parsedValue = the created list/array
-                             Type elementType = isGenericList ? propType.GetGenericArguments()[0] : propType.GetElementType()!;
-                             parsedValue = ParseListOrArray(valueToParse, attr.ListSeparator, elementType, propType.IsArray, logger, configLevel, fullKey, propInfo.Name);
-                        } else {
-                            // Logic to parse single valueToParse into propInfo.PropertyType
-                             parsedValue = ParseValue(valueToParse, propInfo.PropertyType, logger, configLevel, fullKey, propInfo.Name);
-                        }
-
-                        if (parsedValue != null) {
-                            try { propInfo.SetValue(instance, parsedValue); }
-                            catch(ArgumentException argEx) { Log(logger, configLevel, EnvLogLevel.Error, $"Type mismatch setting property {propInfo.Name} from key '{fullKey}'. Expected {propInfo.PropertyType}, got {parsedValue.GetType()}. {argEx.Message}", argEx); }
-                        } else {
-                             // Error already logged by ParseValue/ParseListOrArray if parsing failed
-                             // If valueToParse was null/empty and no default, log if needed
-                             if (envValue == null && !usedDefault) CheckAndLogIfRequiredMissing(propInfo, logger, configLevel, fullKey);
-                        }
-                    } else {
-                        // Value not found, no default provided
-                        CheckAndLogIfRequiredMissing(propInfo, logger, configLevel, fullKey);
-                    }
-                }
-
-                 private static void ProcessNumberedListMode(object instance, PropertyInfo propInfo, EnvAttribute attr, string prefix, IEnvLogSink? logger, EnvLogLevel configLevel)
-                 {
-                    // Validate property type is List<T> or T[]
-                    Type propType = propInfo.PropertyType;
-                    bool isGenericList = propType.IsGenericType && propType.GetGenericTypeDefinition() == typeof(List<>);
-                    bool isArray = propType.IsArray && propType.GetArrayRank() == 1;
-                    if (!(isGenericList || isArray)) {
-                         Log(logger, configLevel, EnvLogLevel.Error, $"[Env(ListPrefix=...)] requires List<T> or T[] type for property {instance.GetType().Name}.{propInfo.Name}, but found {propType.Name}.", null);
-                         return;
-                    }
-                    Type elementType = isGenericList ? propType.GetGenericArguments()[0] : propType.GetElementType()!;
-
-                    var list = new ArrayList(); // Use ArrayList to dynamically add items
-                    for (int i = 1; ; i++)
-                    {
-                        string itemKey = $"{prefix}{attr.ListPrefix}{i}";
-                        string? itemValue = Environment.GetEnvironmentVariable(itemKey);
-
-                        if (string.IsNullOrEmpty(itemValue)) {
-                            if (i==1) Log(logger, configLevel, EnvLogLevel.Debug, $"Numbered list start key '{itemKey}' not found for {propInfo.Name}. List will be empty.", null);
-                            break; // Stop at first missing index
-                        }
-
-                        object? parsedItem = ParseValue(itemValue, elementType, logger, configLevel, itemKey, $"{propInfo.Name}[{i}]");
-                        if (parsedItem != null) {
-                            list.Add(parsedItem);
-                        } else {
-                            Log(logger, configLevel, EnvLogLevel.Warning, $"Parse failed for numbered list item '{itemKey}' for {propInfo.Name}. Stopping list population.", null);
-                            break; // Stop on first parse error
-                        }
-                    }
-
-                     // Convert ArrayList to the target type (List<T> or T[])
-                    object? finalCollection = null;
-                    if(isGenericList) {
-                        var typedList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType), list.Count)!;
-                        foreach(var item in list) { typedList.Add(item); }
-                        finalCollection = typedList;
-                    } else { // isArray
-                         var typedArray = Array.CreateInstance(elementType, list.Count);
-                         list.CopyTo(typedArray, 0);
-                         finalCollection = typedArray;
-                    }
-
-                     try { propInfo.SetValue(instance, finalCollection); }
-                     catch(ArgumentException argEx) { Log(logger, configLevel, EnvLogLevel.Error, $"Type mismatch setting property {propInfo.Name} from ListPrefix '{attr.ListPrefix}'. {argEx.Message}", argEx); }
-                 }
-
-
-                private static void ProcessMapMode(object instance, PropertyInfo propInfo, EnvAttribute attr, string prefix, IEnvLogSink? logger, EnvLogLevel configLevel)
-                {
-                    // Validate property type is Dictionary<TKey, TValue>
-                     Type propType = propInfo.PropertyType;
-                     if (!propType.IsGenericType || propType.GetGenericTypeDefinition() != typeof(Dictionary<,>)) {
-                         Log(logger, configLevel, EnvLogLevel.Error, $"[Env(MapPrefix=...)] requires Dictionary<TKey, TValue> type for property {instance.GetType().Name}.{propInfo.Name}, but found {propType.Name}.", null);
-                         return;
-                     }
-                     Type keyType = propType.GetGenericArguments()[0];
-                     Type valueType = propType.GetGenericArguments()[1];
-
-                     // Create dictionary instance
-                    var dictionary = (IDictionary)Activator.CreateInstance(propType)!;
-                    string mapPrefix = $"{prefix}{attr.MapPrefix}";
-
-                    // Iterate through *all* environment variables to find matches
-                    // This can be slow if there are many variables. Consider optimizations if needed.
-                    var environmentVariables = Environment.GetEnvironmentVariables();
-                    foreach (DictionaryEntry entry in environmentVariables)
-                    {
-                        string envKey = (string)entry.Key;
-                        if (envKey.StartsWith(mapPrefix, StringComparison.OrdinalIgnoreCase))
-                        {
-                            string dictKeyString = envKey.Substring(mapPrefix.Length);
-                            string? dictValueString = entry.Value as string;
-
-                            if (string.IsNullOrEmpty(dictKeyString) || dictValueString == null) continue; // Skip if key part is empty or value is null
-
-                             object? parsedKey = ParseValue(dictKeyString, keyType, logger, configLevel, envKey, $"{propInfo.Name}[Key]");
-                             object? parsedValue = ParseValue(dictValueString, valueType, logger, configLevel, envKey, $"{propInfo.Name}[Value]");
-
-                             if (parsedKey != null && parsedValue != null) {
-                                 try { dictionary.Add(parsedKey, parsedValue); }
-                                 catch (ArgumentException ex) { Log(logger, configLevel, EnvLogLevel.Warning, $"Failed to add key '{dictKeyString}' to dictionary for {propInfo.Name} (prefix '{mapPrefix}'). Key might already exist or be invalid. {ex.Message}", null); }
-                             } else {
-                                 // Error already logged by ParseValue
-                                 Log(logger, configLevel, EnvLogLevel.Warning, $"Skipping entry for env var '{envKey}' due to key/value parse failure for dictionary {propInfo.Name}.", null);
-                             }
-                        }
-                    }
-
-                     try { propInfo.SetValue(instance, dictionary); }
-                     catch(ArgumentException argEx) { Log(logger, configLevel, EnvLogLevel.Error, $"Type mismatch setting property {propInfo.Name} from MapPrefix '{attr.MapPrefix}'. {argEx.Message}", argEx); }
-                }
-
-                private static void ProcessNestedMode(object instance, PropertyInfo propInfo, EnvAttribute attr, string prefix, IEnvLogSink? logger, EnvLogLevel configLevel)
-                {
-                    // Get or create instance of nested object
-                    object? nestedInstance = propInfo.GetValue(instance);
-                    if (nestedInstance == null)
-                    {
-                        // Requires parameterless constructor on nested type
-                        try { nestedInstance = Activator.CreateInstance(propInfo.PropertyType); }
-                        catch (Exception ex) {
-                             Log(logger, configLevel, EnvLogLevel.Error, $"Failed to create instance of nested type {propInfo.PropertyType.Name} for property {propInfo.Name}. It needs a parameterless constructor. {ex.Message}", ex);
-                            return;
-                        }
-                        // Set the newly created instance back onto the parent
-                        try { propInfo.SetValue(instance, nestedInstance); }
-                        catch (Exception ex) { Log(logger, configLevel, EnvLogLevel.Error, $"Failed to set created nested instance for property {propInfo.Name}. {ex.Message}", ex); return; }
-                    }
-
-                    // Recursive call with combined prefix
-                    string nestedPrefix = $"{prefix}{attr.NestedPrefix}";
-                    Log(logger, configLevel, EnvLogLevel.Debug, $"Recursively populating nested property {propInfo.Name} with prefix '{nestedPrefix}'", null);
-
-                    // Use reflection to call PopulateInstance dynamically for the nested type T
-                    // MethodInfo populateMethod = typeof(ReflectionHelper).GetMethod(nameof(PopulateInstance), BindingFlags.Static | BindingFlags.Public); // Or NonPublic if needed
-                    // MethodInfo genericPopulateMethod = populateMethod.MakeGenericMethod(propInfo.PropertyType);
-                    // genericPopulateMethod.Invoke(null, new object?[] { nestedInstance, nestedPrefix, logger, configLevel });
-                     // Simpler: Just call it directly since we know the type at compile time within this method context via propInfo.PropertyType
-                     // BUT, PopulateInstance<T> needs a T constraint. Can we do this? Maybe need a non-generic helper or dynamic.
-                     // Let's try dynamic (less performant but simpler code):
-                     PopulateInstanceDynamic(nestedInstance, nestedPrefix, logger, configLevel);
-
-                     // Alternative: Non-generic helper
-                     // PopulateInstanceInternal(nestedInstance, propInfo.PropertyType, nestedPrefix, logger, configLevel);
-                }
-
-                 // Need a way to call PopulateInstance without knowing T at compile time for recursion
-                 private static void PopulateInstanceDynamic(object instance, string effectivePrefix, IEnvLogSink? logger, EnvLogLevel configuredLogLevel)
-                 {
-                     // This uses dynamic dispatch which might be less performant
-                     // It essentially calls PopulateInstance<ActualType>(...)
-                     // Ensure PopulateInstance is public static if using dynamic this way from external call site if needed
-                     // (though here it's internal static calling itself essentially via dynamic)
-                     // This assumes T:new() constraint isn't strictly needed for the *population* part, only for creation in Load<T>
-                     // Or we add a non-generic internal helper.
-                     dynamic dynamicInstance = instance;
-                     PopulateInstance(dynamicInstance, effectivePrefix, logger, configuredLogLevel);
-
-                     // TODO: Re-evaluate if a non-generic internal helper is better than dynamic.
-                 }
-
-
-                // --- Parsing Helpers ---
-
-                private static object? ParseValue(string value, Type targetType, IEnvLogSink? logger, EnvLogLevel configLevel, string keyContext, string propContext)
-                {
-                    // Handle nullables
-                    Type? underlyingType = Nullable.GetUnderlyingType(targetType);
-                    Type typeToConvert = underlyingType ?? targetType;
-
-                    // Optimization: If target is string, return directly
-                    if (typeToConvert == typeof(string)) return value;
-
-                    // Use TypeConverter for broader support (handles enums, primitives, Guid, TimeSpan, DateTime etc.)
-                    var converter = TypeDescriptor.GetConverter(typeToConvert);
-                    if (converter != null && converter.CanConvertFrom(typeof(string)))
-                    {
-                        try
-                        {
-                             // Use CultureInfo.InvariantCulture for consistent parsing
-                             object? result = converter.ConvertFromString(null, CultureInfo.InvariantCulture, value);
-
-                             // Handle special bool cases ("1", "0") if TypeConverter doesn't already
-                             if (typeToConvert == typeof(bool) && result is bool b && !b) {
-                                 if (value.Trim() == "1") return true;
-                                 // Standard converter usually handles "true"/"false"
-                             }
-                             // Log successful parse? Maybe too verbose for Debug.
-                             return result;
-                        }
-                        catch (Exception ex) // Catches FormatException, NotSupportedException etc. from ConvertFromString
-                        {
-                            Log(logger, configLevel, EnvLogLevel.Error, $"Failed to parse value '{value}' for key '{keyContext}' as type '{typeToConvert.Name}' for property '{propContext}'. {ex.Message}", null); // Don't log exception stack trace unless Debug maybe?
-                            return null;
-                        }
-                    }
-
-                     Log(logger, configLevel, EnvLogLevel.Error, $"No TypeConverter found to parse value '{value}' for key '{keyContext}' as type '{typeToConvert.Name}' for property '{propContext}'.", null);
-                     return null; // Parsing failed
-                }
-
-                private static object? ParseListOrArray(string listString, char separator, Type elementType, bool returnAsArray, IEnvLogSink? logger, EnvLogLevel configLevel, string keyContext, string propContext)
-                {
-                     var items = new ArrayList();
-                     string[] parts = listString.Split(separator, StringSplitOptions.RemoveEmptyEntries); // Remove empty allows "a,,b" -> ["a","b"]
-
-                     for(int i=0; i < parts.Length; i++)
-                     {
-                         string trimmedPart = parts[i].Trim();
-                         if (!string.IsNullOrEmpty(trimmedPart))
-                         {
-                             object? parsedItem = ParseValue(trimmedPart, elementType, logger, configLevel, $"{keyContext}[{i}]", $"{propContext}[{i}]");
-                             if (parsedItem != null) {
-                                 items.Add(parsedItem);
-                             } else {
-                                 // Error already logged by ParseValue
-                                 // Optionally stop processing list on first item error? Currently continues.
-                                 Log(logger, configLevel, EnvLogLevel.Warning, $"Skipping item at index {i} in comma-separated list for key '{keyContext}' due to parse error.", null);
-                             }
-                         }
-                     }
-
-                     // Convert ArrayList to the target type (List<T> or T[])
-                     if(returnAsArray) {
-                         var typedArray = Array.CreateInstance(elementType, items.Count);
-                         items.CopyTo(typedArray, 0);
-                         return typedArray;
-                     } else { // Return as List<T>
-                         var typedList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType), items.Count)!;
-                         foreach(var item in items) { typedList.Add(item); }
-                         return typedList;
-                     }
-                }
-
-                // --- Logging Helper ---
-                private static void Log(IEnvLogSink? logger, EnvLogLevel configuredLevel, EnvLogLevel messageLevel, string message, Exception? ex) {
-                    if (messageLevel <= configuredLevel && logger != null) {
-                         try { logger.Log(messageLevel, message, ex); } catch { /* Ignore logger errors */ }
-                    }
-                }
-
-                // --- Required Check Helper ---
-                 private static void CheckAndLogIfRequiredMissing(PropertyInfo propInfo, IEnvLogSink? logger, EnvLogLevel configLevel, string keyContext)
-                 {
-                     // Required = Value Type AND NOT Nullable<T>
-                     bool isRequired = propInfo.PropertyType.IsValueType && Nullable.GetUnderlyingType(propInfo.PropertyType) == null;
-                     if (isRequired) {
-                          Log(logger, configLevel, EnvLogLevel.Error, $"Required environment variable '{keyContext}' was not found or is empty for non-nullable property '{propInfo.DeclaringType?.Name}.{propInfo.Name}'.", null);
-                     } else {
-                          Log(logger, configLevel, EnvLogLevel.Debug, $"Optional environment variable '{keyContext}' was not found for property '{propInfo.DeclaringType?.Name}.{propInfo.Name}'.", null);
-                     }
-                 }
-            }
-            ```
-
 ### 4.2. Logging Adapters (`EnvoyConfig.Adapters.*`) (net8.0)
 
 * **Purpose:** Bridge `EnvoyConfig.Logging.IEnvLogSink` to specific logging frameworks (MEL, Serilog, NLog).
@@ -934,27 +565,38 @@ This section details the purpose, key files, dependencies, and implementation no
 * Maintain comprehensive `///` comments for all public types/members in `EnvoyConfig` and adapters.
 * Use `<GenerateDocumentationFile>true</GenerateDocumentationFile>` in `.csproj` files. This aids IntelliSense and potential future DocFX generation.
 
-## 7. Implementation Plan (High-Level for Reflection)
+## 7. Windsurf AI Implementation Plan
 
-1. **Setup Core Project:** Create `EnvoyConfig` project, move `EnvAttribute`, `IEnvLogSink`, `EnvLogLevel` into `Attributes/` and `Logging/` folders. Create `EnvConfig.cs` structure.
-2. **Implement `ReflectionHelper.PopulateInstance`:** Write the core recursive reflection logic.
-    * Implement a thread-safe caching layer for reflection metadata and attribute lookups.
-    * Design parsing via an `IEnvValueParser` (or similar) extension point so custom `TypeConverter`-style hooks can be injected later.
-    * Implement property iteration and attribute finding.
-    * Implement runtime validation of attribute modes.
-    * Implement `ProcessKeyMode` (including `IsList` for List/Array).
-    * Implement `ProcessNumberedListMode` (for List/Array).
-    * Implement `ProcessMapMode` (for Dictionary).
-    * Implement `ProcessNestedMode` (recursive call).
-    * Implement robust `ParseValue` helper using `TypeConverter`.
-    * Implement `ParseListOrArray` helper.
-    * Implement logging calls throughout.
-3. **Implement `EnvConfig.Load<T>`:** Call `ReflectionHelper.PopulateInstance`.
-4. **Setup Adapters:** Create projects, reference `EnvoyConfig`, implement adapters.
-5. **Setup Tests:** Create project, reference `EnvoyConfig`, `MSTest`, `Moq`.
-6. **Write Tests:** Implement comprehensive tests covering all modes, types, prefixes, defaults, errors, and logging.
-7. **Setup Sample:** Create project, reference `EnvoyConfig`, adapter. Write sample code demonstrating features.
-8. **Documentation:** Write `README.md` and ensure XML comments are complete.
-9. **CI/CD:** Set up build/test/release pipeline using GitVersion.
+Overview: Steps optimized for execution via Windsurf AI using GPT-4.1, referencing blueprint sections for focused context.
 
-* **Review Existing Code:** Always Check existing code, especially `EnvoyConfig.Sample` and `EnvoyConfig.Tests` for existing implementation. If found, analyze it and ask the user whether to update, extend, or replace before writing new code.
+1. Scaffold Core Project ([3.1 Project Structure](#31-ascii-tree-diagram), [4.1 Core Library](#41-envoyconfig-core-library-net80))
+   - Create solution, core `EnvoyConfig` project & csproj
+   - Add `Attributes/`, `Logging/`, `Internal/` folders and key files
+
+2. Implement Reflection Helper ([4.1 Core Library](#41-envoyconfig-core-library-net80))
+   - Add thread-safe metadata cache
+   - Develop `PopulateInstance<T>` and mode handlers (Key, List, Map, Nested)
+
+3. Integrate Load Method ([4.1 Core Library](#41-envoyconfig-core-library-net80), [2.4 Error Handling](#24-error-handling-logging-vs-exceptions))
+   - Ensure `EnvConfig.Load<T>` invokes helper and logs per rules
+
+4. Set Up Adapters ([4.2 Logging Adapters](#42-logging-adapters-envoyconfigadapters-net80))
+   - Create Microsoft, Serilog, NLog adapter projects
+   - Map `IEnvLogSink` to each framework
+
+5. Develop Tests ([4.3 EnvoyConfig.Tests](#43-envoyconfigtests-net80))
+   - Configure MSTest & Moq
+   - Write unit tests for every attribute mode & logging
+
+6. Build Sample App ([4.4 EnvoyConfig.Sample](#44-envoyconfig-sample-net80))
+   - Scaffold sample project, configure logging adapter
+   - Demonstrate all modes with example classes & env vars
+
+7. Prepare Documentation ([6.1 README Outline](#61-readmemd-outline-solution-root), [6.2 XML Docs](#62-xml-documentation-comments))
+   - Draft `README.md` per outline
+   - Ensure full XML comments in public APIs
+
+8. Configure CI/CD ([5.1 Build Process](#51-build-process), [5.2 Testing](#52-testing), [5.3 Packaging](#53-packaging), [5.4 CI/CD](#54-cicd))
+   - Define GitHub Actions for build, test, pack, publish
+
+*Each step includes markdown references to blueprint sections to guide GPT-4.1 context loading.*

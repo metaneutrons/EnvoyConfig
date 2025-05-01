@@ -1,0 +1,58 @@
+using System;
+
+namespace EnvoyConfig.Attributes
+{
+    /// <summary>
+    /// Marks a property for environment variable initialization.
+    /// </summary>
+    public enum MapKeyCasingMode
+    {
+        Lower,
+        Upper,
+        AsIs,
+    }
+
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public sealed class EnvAttribute : Attribute
+    {
+        /// <summary>
+        /// The environment variable key to map to this property.
+        /// </summary>
+        public string? Key { get; set; }
+
+        /// <summary>
+        /// The default value to use if the environment variable is not set.
+        /// </summary>
+        public string? Default { get; set; }
+
+        /// <summary>
+        /// If true, parses the value as a list (comma-separated by default).
+        /// </summary>
+        public bool IsList { get; set; }
+
+        /// <summary>
+        /// The separator character for list parsing (default: ',').
+        /// </summary>
+        public char ListSeparator { get; set; } = ',';
+
+        /// <summary>
+        /// Prefix for numbered list mode (e.g., PREFIX_1, PREFIX_2, ...).
+        /// </summary>
+        public string? ListPrefix { get; set; }
+
+        /// <summary>
+        /// Prefix for dictionary/map mode (e.g., PREFIX_key=value).
+        /// </summary>
+        public string? MapPrefix { get; set; }
+
+        /// <summary>
+        /// Controls how keys are cased for MapPrefix properties: Lower, Upper, or AsIs. Default is Lower.
+        /// </summary>
+        public MapKeyCasingMode MapKeyCasing { get; set; } = MapKeyCasingMode.Lower;
+
+        /// <summary>
+        /// Prefix for nested object mode (recursively prepends to child keys).
+        /// </summary>
+        public string? NestedPrefix { get; set; }
+    }
+}
