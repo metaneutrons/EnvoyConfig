@@ -132,7 +132,7 @@ public static class ReflectionHelper
                             BindingFlags.Public | BindingFlags.Static
                         )!
                         .MakeGenericMethod(nestedType)
-                        .Invoke(null, new object?[] { logger, prefix + attr.NestedPrefix, null });
+                        .Invoke(null, [logger, prefix + attr.NestedPrefix, null]);
                     value = nestedInstance;
                 }
                 // List of nested objects (NestedListPrefix/NestedListSuffix)
@@ -418,7 +418,7 @@ public static class ReflectionHelper
                     BindingFlags.Public | BindingFlags.Static
                 )!
                 .MakeGenericMethod(elemType)
-                .Invoke(null, new object?[] { logger, nestedPrefix, variables });
+                .Invoke(null, [logger, nestedPrefix, variables]);
             list.Add(nested);
         }
         return list;

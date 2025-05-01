@@ -5,11 +5,12 @@ namespace EnvoyConfig.Tests;
 
 using System;
 using System.Collections.Generic;
+using Xunit.Abstractions;
 
 [Collection("NonParallel")]
-public class NestedList
+public abstract class NestedList
 {
-    public class ZoneMqttConfig
+    public abstract class ZoneMqttConfig
     {
         [Env(Key = "CONTROL_SET_TOPIC")]
         public string ControlSetTopic { get; set; } = null!;
@@ -48,7 +49,7 @@ public class NestedList
     public class ZonesConfig
     {
         [Env(NestedListPrefix = "ZONE_", NestedListSuffix = "_MQTT_")]
-        public List<ZoneMqttConfig> ZonesMqtt { get; set; } = new();
+        public List<ZoneMqttConfig> ZonesMqtt { get; set; } = [];
     }
 
     private void ClearZoneVars()
@@ -65,7 +66,7 @@ public class NestedList
     [Fact]
     public void Loads_NestedList_From_Env()
     {
-        ClearZoneVars();
+        this.ClearZoneVars();
         try
         {
             Environment.SetEnvironmentVariable("ZONE_1_MQTT_CONTROL_SET_TOPIC", "control/set");
@@ -74,24 +75,6 @@ public class NestedList
             Environment.SetEnvironmentVariable("ZONE_2_MQTT_TRACK_SET_TOPIC", "track/set2");
             var config = EnvConfig.Load<ZonesConfig>();
             Assert.Equal(2, config.ZonesMqtt.Count);
-            // Debug output
-            Console.WriteLine(
-                $"ZONE_1_MQTT_CONTROL_SET_TOPIC: {Environment.GetEnvironmentVariable("ZONE_1_MQTT_CONTROL_SET_TOPIC")}"
-            );
-            Console.WriteLine(
-                $"ZONE_1_MQTT_TRACK_SET_TOPIC: {Environment.GetEnvironmentVariable("ZONE_1_MQTT_TRACK_SET_TOPIC")}"
-            );
-            Console.WriteLine(
-                $"ZONE_2_MQTT_CONTROL_SET_TOPIC: {Environment.GetEnvironmentVariable("ZONE_2_MQTT_CONTROL_SET_TOPIC")}"
-            );
-            Console.WriteLine(
-                $"ZONE_2_MQTT_TRACK_SET_TOPIC: {Environment.GetEnvironmentVariable("ZONE_2_MQTT_TRACK_SET_TOPIC")}"
-            );
-            Console.WriteLine($"config.ZonesMqtt[0].ControlSetTopic: {config.ZonesMqtt[0].ControlSetTopic}");
-            Console.WriteLine($"config.ZonesMqtt[0].TrackSetTopic: {config.ZonesMqtt[0].TrackSetTopic}");
-            Console.WriteLine($"config.ZonesMqtt[1].ControlSetTopic: {config.ZonesMqtt[1].ControlSetTopic}");
-            Console.WriteLine($"config.ZonesMqtt[1].TrackSetTopic: {config.ZonesMqtt[1].TrackSetTopic}");
-
             Assert.Equal("control/set", config.ZonesMqtt[0].ControlSetTopic);
             Assert.Equal("track/set", config.ZonesMqtt[0].TrackSetTopic);
             Assert.Equal("control/set2", config.ZonesMqtt[1].ControlSetTopic);
@@ -99,7 +82,7 @@ public class NestedList
         }
         finally
         {
-            ClearZoneVars();
+            this.ClearZoneVars();
         }
     }
 }

@@ -11,7 +11,7 @@ namespace EnvoyConfig.Adapters.Serilog
 
         public SerilogLoggerAdapter(ILogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public void Log(EnvLogLevel level, string message)
@@ -19,16 +19,16 @@ namespace EnvoyConfig.Adapters.Serilog
             switch (level)
             {
                 case EnvLogLevel.Debug:
-                    _logger.Debug(message);
+                    this._logger.Debug(message);
                     break;
                 case EnvLogLevel.Info:
-                    _logger.Information(message);
+                    this._logger.Information(message);
                     break;
                 case EnvLogLevel.Warning:
-                    _logger.Warning(message);
+                    this._logger.Warning(message);
                     break;
                 case EnvLogLevel.Error:
-                    _logger.Error(message);
+                    this._logger.Error(message);
                     break;
                 default:
                     break;

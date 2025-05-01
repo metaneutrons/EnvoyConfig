@@ -11,7 +11,7 @@ namespace EnvoyConfig.Adapters.NLog
 
         public NLogLoggerAdapter(Logger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public void Log(EnvLogLevel level, string message)
@@ -19,16 +19,16 @@ namespace EnvoyConfig.Adapters.NLog
             switch (level)
             {
                 case EnvLogLevel.Debug:
-                    _logger.Debug(message);
+                    this._logger.Debug(message);
                     break;
                 case EnvLogLevel.Info:
-                    _logger.Info(message);
+                    this._logger.Info(message);
                     break;
                 case EnvLogLevel.Warning:
-                    _logger.Warn(message);
+                    this._logger.Warn(message);
                     break;
                 case EnvLogLevel.Error:
-                    _logger.Error(message);
+                    this._logger.Error(message);
                     break;
                 default:
                     break;

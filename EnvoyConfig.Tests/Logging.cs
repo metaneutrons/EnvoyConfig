@@ -17,9 +17,9 @@ public class Logging
 
     private class CaptureLogSink : IEnvLogSink
     {
-        public readonly List<(EnvLogLevel Level, string Msg)> Entries = new();
+        public readonly List<(EnvLogLevel Level, string Msg)> Entries = [];
 
-        public void Log(EnvLogLevel level, string message) => Entries.Add((level, message));
+        public void Log(EnvLogLevel level, string message) => this.Entries.Add((level, message));
     }
 
     [Fact]

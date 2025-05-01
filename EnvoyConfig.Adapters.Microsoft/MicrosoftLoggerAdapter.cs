@@ -11,13 +11,13 @@ namespace EnvoyConfig.Adapters.Microsoft
 
         public MicrosoftLoggerAdapter(ILogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public void Log(EnvLogLevel level, string message)
         {
             var melLevel = ConvertLevel(level);
-            _logger.Log(melLevel, new EventId(), message, null, (state, ex) => state);
+            this._logger.Log(melLevel, new EventId(), message, null, (state, ex) => state);
         }
 
         private static LogLevel ConvertLevel(EnvLogLevel level) =>

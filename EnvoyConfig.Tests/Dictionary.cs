@@ -10,19 +10,19 @@ public class Dictionary
     public class DictConfig
     {
         [Env(MapPrefix = "MAP_")]
-        public Dictionary<string, int> Map { get; set; } = new();
+        public Dictionary<string, int> Map { get; set; } = [];
     }
 
     public class DictConfigUpper
     {
         [Env(MapPrefix = "MAP_", MapKeyCasing = MapKeyCasingMode.Upper)]
-        public Dictionary<string, int> Map { get; set; } = new();
+        public Dictionary<string, int> Map { get; set; } = [];
     }
 
     public class DictConfigAsIs
     {
         [Env(MapPrefix = "MAP_", MapKeyCasing = MapKeyCasingMode.AsIs)]
-        public Dictionary<string, int> Map { get; set; } = new();
+        public Dictionary<string, int> Map { get; set; } = [];
     }
 
     private void ClearMapVars()
@@ -39,7 +39,7 @@ public class Dictionary
     [Fact]
     public void Loads_Dictionary_From_MapPrefix()
     {
-        ClearMapVars();
+        this.ClearMapVars();
         Environment.SetEnvironmentVariable("MAP_foo", "10");
         Environment.SetEnvironmentVariable("MAP_bar", "20");
         var config = EnvConfig.Load<DictConfig>();
@@ -53,7 +53,7 @@ public class Dictionary
     [Fact]
     public void Loads_Dictionary_From_MapPrefix_UpperCase()
     {
-        ClearMapVars();
+        this.ClearMapVars();
         Environment.SetEnvironmentVariable("MAP_Foo", "1");
         Environment.SetEnvironmentVariable("MAP_Bar", "2");
         var config = EnvConfig.Load<DictConfigUpper>();
@@ -67,7 +67,7 @@ public class Dictionary
     [Fact]
     public void Loads_Dictionary_From_MapPrefix_AsIs()
     {
-        ClearMapVars();
+        this.ClearMapVars();
         Environment.SetEnvironmentVariable("MAP_Foo", "100");
         Environment.SetEnvironmentVariable("MAP_Bar", "200");
         var config = EnvConfig.Load<DictConfigAsIs>();

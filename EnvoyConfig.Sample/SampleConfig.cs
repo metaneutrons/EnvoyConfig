@@ -46,16 +46,16 @@ public class SampleConfig
     public bool ApiAuthEnabled { get; set; }
 
     [Env(ListPrefix = "API_APIKEY_")]
-    public List<string> ApiKeys { get; set; } = new();
+    public List<string> ApiKeys { get; set; } = [];
 
     [Env(Key = "ZONES", IsList = true)]
-    public List<string> Zones { get; set; } = new();
+    public List<string> Zones { get; set; } = [];
 
     // Snapcast configuration as a map
     [Env(MapPrefix = "SNAPCAST_")]
-    public Dictionary<string, string> Snapcast { get; set; } = new();
+    public Dictionary<string, string> Snapcast { get; set; } = [];
 
     // List of MQTT zone configs
     [Env(NestedListPrefix = "ZONE_", NestedListSuffix = "_MQTT_")]
-    public List<SampleZoneMqttConfig> ZonesMqtt { get; set; } = new();
+    public List<SampleZoneMqttConfig> ZonesMqtt { get; set; } = [];
 }

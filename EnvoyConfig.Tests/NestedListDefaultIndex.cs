@@ -5,10 +5,18 @@ namespace EnvoyConfig.Tests;
 
 using System;
 using System.Collections.Generic;
+using Xunit.Abstractions;
 
 [Collection("NonParallel")]
 public class NestedListDefaultIndex
 {
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public NestedListDefaultIndex(ITestOutputHelper testOutputHelper)
+    {
+        this._testOutputHelper = testOutputHelper;
+    }
+
     public class ZoneMqttConfigWithDefault
     {
         [Env(Key = "BASETOPIC", Default = "snapdog/zones/{index}")]
@@ -21,7 +29,7 @@ public class NestedListDefaultIndex
     public class ZonesConfigWithDefault
     {
         [Env(NestedListPrefix = "ZONE_", NestedListSuffix = "_MQTT_")]
-        public List<ZoneMqttConfigWithDefault> ZonesMqtt { get; set; } = new();
+        public List<ZoneMqttConfigWithDefault> ZonesMqtt { get; set; } = [];
     }
 
     private void ClearZoneVars()
@@ -38,7 +46,7 @@ public class NestedListDefaultIndex
     [Fact]
     public void Uses_Index_In_Default()
     {
-        ClearZoneVars();
+        this.ClearZoneVars();
         try
         {
             // Only set CONTROL_SET_TOPIC, not BASETOPIC
@@ -46,20 +54,6 @@ public class NestedListDefaultIndex
             Environment.SetEnvironmentVariable("ZONE_2_MQTT_CONTROL_SET_TOPIC", "c2");
             var config = EnvConfig.Load<ZonesConfigWithDefault>();
             Assert.Equal(2, config.ZonesMqtt.Count);
-            // Debug output
-            Console.WriteLine($"ZONE_1_MQTT_BASETOPIC: {Environment.GetEnvironmentVariable("ZONE_1_MQTT_BASETOPIC")}");
-            Console.WriteLine($"ZONE_2_MQTT_BASETOPIC: {Environment.GetEnvironmentVariable("ZONE_2_MQTT_BASETOPIC")}");
-            Console.WriteLine(
-                $"ZONE_1_MQTT_CONTROL_SET_TOPIC: {Environment.GetEnvironmentVariable("ZONE_1_MQTT_CONTROL_SET_TOPIC")}"
-            );
-            Console.WriteLine(
-                $"ZONE_2_MQTT_CONTROL_SET_TOPIC: {Environment.GetEnvironmentVariable("ZONE_2_MQTT_CONTROL_SET_TOPIC")}"
-            );
-            Console.WriteLine($"config.ZonesMqtt[0].BaseTopic: {config.ZonesMqtt[0].BaseTopic}");
-            Console.WriteLine($"config.ZonesMqtt[1].BaseTopic: {config.ZonesMqtt[1].BaseTopic}");
-            Console.WriteLine($"config.ZonesMqtt[0].ControlSetTopic: {config.ZonesMqtt[0].ControlSetTopic}");
-            Console.WriteLine($"config.ZonesMqtt[1].ControlSetTopic: {config.ZonesMqtt[1].ControlSetTopic}");
-
             Assert.Equal("snapdog/zones/1", config.ZonesMqtt[0].BaseTopic);
             Assert.Equal("snapdog/zones/2", config.ZonesMqtt[1].BaseTopic);
             Assert.Equal("c1", config.ZonesMqtt[0].ControlSetTopic);
@@ -67,7 +61,7 @@ public class NestedListDefaultIndex
         }
         finally
         {
-            ClearZoneVars();
+            this.ClearZoneVars();
         }
     }
 }
