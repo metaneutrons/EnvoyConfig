@@ -7,13 +7,11 @@ tag-prefix: '[vV]'
 branches:
   main:
     regex: ^main$
-    label: ''
     increment: Patch
     is-release-branch: true
 
   develop:
     regex: ^develop$
-    label: beta
     increment: Minor
     is-release-branch: false
 

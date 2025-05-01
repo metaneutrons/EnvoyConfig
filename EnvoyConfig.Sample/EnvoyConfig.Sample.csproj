@@ -9,8 +9,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../EnvoyConfig/EnvoyConfig.csproj" />
-    <PackageReference Include="Spectre.Console" />
-    <PackageReference Include="dotenv.net" />
+    <PackageReference Include="Spectre.Console" Version="0.50.0" />
+    <PackageReference Include="dotenv.net" Version="3.2.1" />
   </ItemGroup>
   <ItemGroup>
     <None Update="sample.env">
