@@ -1,10 +1,9 @@
-namespace EnvoyConfig.Sample;
-
 using System.Collections.Generic;
-using EnvoyConfig.Abstractions;
 using EnvoyConfig.Attributes;
 
-public partial class SampleConfig : IEnvInitializable
+namespace EnvoyConfig.Sample;
+
+public class SampleConfig
 {
     [Env(Key = "ENVIRONMENT", Default = "Development")]
     public string Env { get; set; } = null!;
@@ -12,7 +11,7 @@ public partial class SampleConfig : IEnvInitializable
     [Env(Key = "LOG_LEVEL", Default = "Information")]
     public string LogLevel { get; set; } = null!;
 
-    [Env(Key = "TELEMETRY_ENABLED", Default = true)]
+    [Env(Key = "TELEMETRY_ENABLED", Default = "true")]
     public bool TelemetryEnabled { get; set; }
 
     [Env(Key = "TELEMETRY_SERVICE_NAME", Default = "sample")]
@@ -50,4 +49,8 @@ public partial class SampleConfig : IEnvInitializable
 
     [Env(Key = "ZONES", IsList = true)]
     public List<string> Zones { get; set; } = new();
+
+    // Snapcast configuration as a map
+    [Env(MapPrefix = "SNAPCAST_")]
+    public Dictionary<string, string> Snapcast { get; set; } = new();
 }
