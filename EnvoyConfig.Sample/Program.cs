@@ -1,17 +1,15 @@
-using System;
 using dotenv.net;
-using EnvoyConfig;
 using Spectre.Console;
 
 namespace EnvoyConfig.Sample;
 
-class Program
+internal class Program
 {
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         // Resolve absolute path to sample.env
         var envPath = Path.Combine(AppContext.BaseDirectory, "sample.env");
-        if (!System.IO.File.Exists(envPath))
+        if (!File.Exists(envPath))
         {
             // Try project dir relative to working dir
             envPath = Path.GetFullPath("EnvoyConfig.Sample/sample.env", Environment.CurrentDirectory);
@@ -151,13 +149,13 @@ class Program
         AnsiConsole.MarkupLine("[italic grey]Tip: Edit sample.env and rerun to see changes instantly![/]");
     }
 
-    static void PrintSection(string title, string icon, (string, string, string)[] rows)
+    private static void PrintSection(string title, string icon, (string, string, string)[] rows)
     {
         var panel = new Panel(CreateTable(rows)).Header($"{icon} [bold]{title}[/]", Justify.Left).Collapse();
         AnsiConsole.Write(panel);
     }
 
-    static Table CreateTable((string, string, string)[] rows)
+    private static Table CreateTable((string, string, string)[] rows)
     {
         var table = new Table().NoBorder();
         table.AddColumn(new TableColumn("[grey]Key[/]").LeftAligned());
@@ -165,20 +163,20 @@ class Program
         table.AddColumn(new TableColumn("[grey]Value[/]").LeftAligned());
         foreach (var (k, t, v) in rows)
         {
-            var safeType = Spectre.Console.Markup.Escape(t);
+            var safeType = Markup.Escape(t);
             string[] lines;
             if ((t.Contains("[]") || t.ToLower().Contains("array")) && v.Contains(","))
             {
                 // Split by comma and display each on a new line
-                lines = v.Split(',').Select(s => Spectre.Console.Markup.Escape(s.Trim())).ToArray();
+                lines = v.Split(',').Select(s => Markup.Escape(s.Trim())).ToArray();
             }
             else if (v.Contains("\n"))
             {
-                lines = v.Split('\n').Select(s => Spectre.Console.Markup.Escape(s)).ToArray();
+                lines = v.Split('\n').Select(s => Markup.Escape(s)).ToArray();
             }
             else
             {
-                lines = new[] { Spectre.Console.Markup.Escape(v) };
+                lines = new[] { Markup.Escape(v) };
             }
             for (int i = 0; i < lines.Length; i++)
             {

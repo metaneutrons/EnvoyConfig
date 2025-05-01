@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using EnvoyConfig.Attributes;
 using EnvoyConfig.Logging;
@@ -107,7 +104,7 @@ internal static class ReflectionHelper
                     var nestedInstance = typeof(ReflectionHelper)
                         .GetMethod(
                             nameof(PopulateInstance),
-                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+                            BindingFlags.Public | BindingFlags.Static
                         )!
                         .MakeGenericMethod(nestedType)
                         .Invoke(null, new object?[] { logger, prefix + attr.NestedPrefix, null });
@@ -312,7 +309,7 @@ internal static class ReflectionHelper
         string prefix,
         Type type,
         IEnvLogSink? logger,
-        EnvoyConfig.Attributes.MapKeyCasingMode casingMode = EnvoyConfig.Attributes.MapKeyCasingMode.Lower
+        MapKeyCasingMode casingMode = MapKeyCasingMode.Lower
     )
     {
         var args = type.GenericTypeArguments;
@@ -334,13 +331,13 @@ internal static class ReflectionHelper
             var dictKey = key.Substring(prefix.Length);
             switch (casingMode)
             {
-                case EnvoyConfig.Attributes.MapKeyCasingMode.Lower:
+                case MapKeyCasingMode.Lower:
                     dictKey = dictKey.ToLowerInvariant();
                     break;
-                case EnvoyConfig.Attributes.MapKeyCasingMode.Upper:
+                case MapKeyCasingMode.Upper:
                     dictKey = dictKey.ToUpperInvariant();
                     break;
-                case EnvoyConfig.Attributes.MapKeyCasingMode.AsIs:
+                case MapKeyCasingMode.AsIs:
                 default:
                     break;
             }
@@ -393,7 +390,7 @@ internal static class ReflectionHelper
             var nested = typeof(ReflectionHelper)
                 .GetMethod(
                     nameof(PopulateInstance),
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+                    BindingFlags.Public | BindingFlags.Static
                 )!
                 .MakeGenericMethod(elemType)
                 .Invoke(null, new object?[] { logger, nestedPrefix, variables });

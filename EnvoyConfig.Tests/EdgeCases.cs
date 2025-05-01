@@ -1,5 +1,3 @@
-using System;
-using EnvoyConfig;
 using EnvoyConfig.Attributes;
 using Xunit;
 

@@ -1,4 +1,3 @@
-using System;
 using EnvoyConfig.Logging;
 using Microsoft.Extensions.Logging;
 

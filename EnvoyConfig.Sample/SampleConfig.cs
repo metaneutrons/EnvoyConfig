@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using EnvoyConfig.Attributes;
 
 namespace EnvoyConfig.Sample;
