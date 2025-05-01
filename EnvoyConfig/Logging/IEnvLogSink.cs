@@ -23,14 +23,19 @@ public enum EnvLogLevel
 {
     /// <summary>Trace messages (most verbose).</summary>
     Trace,
+
     /// <summary>Debug messages.</summary>
     Debug,
+
     /// <summary>Informational messages.</summary>
     Info,
+
     /// <summary>Warnings.</summary>
     Warning,
+
     /// <summary>Errors.</summary>
     Error,
+
     /// <summary>Logging disabled.</summary>
-    Off
+    Off,
 }

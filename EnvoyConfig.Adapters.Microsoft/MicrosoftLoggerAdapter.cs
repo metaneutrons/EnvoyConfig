@@ -1,12 +1,13 @@
+using System;
 using EnvoyConfig.Logging;
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace EnvoyConfig.Adapters.Microsoft
 {
     public class MicrosoftLoggerAdapter : IEnvLogSink
     {
         private readonly ILogger _logger;
+
         public MicrosoftLoggerAdapter(ILogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -18,14 +19,15 @@ namespace EnvoyConfig.Adapters.Microsoft
             _logger.Log(melLevel, new EventId(), message, null, (state, ex) => state);
         }
 
-        private static LogLevel ConvertLevel(EnvLogLevel level) => level switch
-        {
-            EnvLogLevel.Debug => LogLevel.Debug,
-            EnvLogLevel.Info => LogLevel.Information,
-            EnvLogLevel.Warning => LogLevel.Warning,
-            EnvLogLevel.Error => LogLevel.Error,
-            EnvLogLevel.Off => LogLevel.None,
-            _ => LogLevel.None,
-        };
+        private static LogLevel ConvertLevel(EnvLogLevel level) =>
+            level switch
+            {
+                EnvLogLevel.Debug => LogLevel.Debug,
+                EnvLogLevel.Info => LogLevel.Information,
+                EnvLogLevel.Warning => LogLevel.Warning,
+                EnvLogLevel.Error => LogLevel.Error,
+                EnvLogLevel.Off => LogLevel.None,
+                _ => LogLevel.None,
+            };
     }
 }

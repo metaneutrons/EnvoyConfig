@@ -47,7 +47,10 @@ class Program
             table.AddColumn(new TableColumn("[grey]Env Key[/]").LeftAligned());
             table.AddColumn(new TableColumn("[grey]Value[/]").LeftAligned());
             foreach (var (k, v) in snapdogVars)
+            {
                 table.AddRow($"[white]{k}[/]", $"[bold cyan]{v}[/]");
+            }
+
             AnsiConsole.Write(
                 new Panel(table).Header("[green]SNAPDOG_ Environment Variables[/]", Justify.Left).Collapse()
             );
@@ -55,15 +58,23 @@ class Program
         AnsiConsole.Write(new Rule("[grey]--- END ENVIRONMENT VARIABLES ---[/]").RuleStyle("grey"));
         AnsiConsole.WriteLine();
 
-        PrintSection("System", "⚙️", new[] { ($"Environment", config.Env), ($"Log Level", config.LogLevel) });
+        PrintSection(
+            "System",
+            "⚙️",
+            new[]
+            {
+                ("Environment", typeof(string).Name, config.Env),
+                ("Log Level", typeof(string).Name, config.LogLevel),
+            }
+        );
         PrintSection(
             "Telemetry",
             "📊",
             new[]
             {
-                ($"Enabled", config.TelemetryEnabled.ToString()),
-                ($"Service Name", config.TelemetryServiceName),
-                ($"Sampling Rate", config.TelemetrySamplingRate.ToString()),
+                ("Enabled", typeof(bool).Name, config.TelemetryEnabled.ToString()),
+                ("Service Name", typeof(string).Name, config.TelemetryServiceName),
+                ("Sampling Rate", typeof(int).Name, config.TelemetrySamplingRate.ToString()),
             }
         );
         PrintSection(
@@ -71,9 +82,9 @@ class Program
             "📈",
             new[]
             {
-                ($"Enabled", config.PrometheusEnabled.ToString()),
-                ($"Path", config.PrometheusPath),
-                ($"Port", config.PrometheusPort.ToString()),
+                ("Enabled", typeof(bool).Name, config.PrometheusEnabled.ToString()),
+                ("Path", typeof(string).Name, config.PrometheusPath),
+                ("Port", typeof(int).Name, config.PrometheusPort.ToString()),
             }
         );
         PrintSection(
@@ -81,21 +92,29 @@ class Program
             "🕵️",
             new[]
             {
-                ($"Enabled", config.JaegerEnabled.ToString()),
-                ($"Endpoint", config.JaegerEndpoint),
-                ($"Agent Host", config.JaegerAgentHost),
-                ($"Agent Port", config.JaegerAgentPort.ToString()),
+                ("Enabled", typeof(bool).Name, config.JaegerEnabled.ToString()),
+                ("Endpoint", typeof(string).Name, config.JaegerEndpoint),
+                ("Agent Host", typeof(string).Name, config.JaegerAgentHost),
+                ("Agent Port", typeof(int).Name, config.JaegerAgentPort.ToString()),
             }
         );
         PrintSection(
             "API Auth",
             "🔑",
-            new[] { ($"Enabled", config.ApiAuthEnabled.ToString()), ($"API Keys", string.Join(", ", config.ApiKeys)) }
+            new[]
+            {
+                ("Enabled", typeof(bool).Name, config.ApiAuthEnabled.ToString()),
+                ("API Keys", "string[]", string.Join(", ", config.ApiKeys)),
+            }
         );
-        PrintSection("Zones", "🗺️", new[] { ($"Zones", string.Join(", ", config.Zones)) });
+        PrintSection("Zones", "🗺️", new[] { ("Zones", "string[]", string.Join(", ", config.Zones)) });
 
         // Snapcast configuration as key-value map
-        PrintSection("Snapcast", "🎵", config.Snapcast.Select(kv => ($"{kv.Key}", kv.Value)).ToArray());
+        PrintSection(
+            "Snapcast (key-value object)",
+            "🎵",
+            config.Snapcast.Select(kv => (kv.Key, typeof(string).Name, kv.Value)).ToArray()
+        );
 
         // Print all MQTT zone configs
         if (config.ZonesMqtt != null && config.ZonesMqtt.Count > 0)
@@ -103,19 +122,27 @@ class Program
             int idx = 1;
             foreach (var zone in config.ZonesMqtt)
             {
-                PrintSection($"MQTT Zone {idx}", "📡", new[] {
-                    ("Control Set Topic", zone.ControlSetTopic),
-                    ("Track Set Topic", zone.TrackSetTopic),
-                    ("Playlist Set Topic", zone.PlaylistSetTopic),
-                    ("Volume Set Topic", zone.VolumeSetTopic),
-                    ("Mute Set Topic", zone.MuteSetTopic),
-                    ("Control Topic", zone.ControlTopic),
-                    ("Track Topic", zone.TrackTopic),
-                    ("Playlist Topic", zone.PlaylistTopic),
-                    ("Volume Topic", zone.VolumeTopic),
-                    ("Mute Topic", zone.MuteTopic),
-                    ("State Topic", zone.StateTopic)
-                });
+                var props = zone.GetType().GetProperties();
+                var rows = props
+                    .Select(p =>
+                        (
+                            p.Name.Replace("Topic", " Topic")
+                                .Replace("Set ", "Set ")
+                                .Replace("Base", "Base ")
+                                .Replace("Control", "Control ")
+                                .Replace("Track", "Track ")
+                                .Replace("Playlist", "Playlist ")
+                                .Replace("Volume", "Volume ")
+                                .Replace("Mute", "Mute ")
+                                .Replace("State", "State ")
+                                .Replace("  ", " ")
+                                .Trim(),
+                            p.PropertyType.Name,
+                            p.GetValue(zone)?.ToString() ?? "<null>"
+                        )
+                    )
+                    .ToArray();
+                PrintSection($"MQTT Zone {idx}", "📡", rows);
                 idx++;
             }
         }
@@ -124,20 +151,46 @@ class Program
         AnsiConsole.MarkupLine("[italic grey]Tip: Edit sample.env and rerun to see changes instantly![/]");
     }
 
-    static void PrintSection(string title, string icon, (string, string)[] rows)
+    static void PrintSection(string title, string icon, (string, string, string)[] rows)
     {
         var panel = new Panel(CreateTable(rows)).Header($"{icon} [bold]{title}[/]", Justify.Left).Collapse();
         AnsiConsole.Write(panel);
     }
 
-    static Table CreateTable((string, string)[] rows)
+    static Table CreateTable((string, string, string)[] rows)
     {
         var table = new Table().NoBorder();
         table.AddColumn(new TableColumn("[grey]Key[/]").LeftAligned());
+        table.AddColumn(new TableColumn("[grey]Type[/]").LeftAligned());
         table.AddColumn(new TableColumn("[grey]Value[/]").LeftAligned());
-        foreach (var (k, v) in rows)
+        foreach (var (k, t, v) in rows)
         {
-            table.AddRow($"[white]{k}[/]", $"[bold cyan]{v}[/]");
+            var safeType = Spectre.Console.Markup.Escape(t);
+            string[] lines;
+            if ((t.Contains("[]") || t.ToLower().Contains("array")) && v.Contains(","))
+            {
+                // Split by comma and display each on a new line
+                lines = v.Split(',').Select(s => Spectre.Console.Markup.Escape(s.Trim())).ToArray();
+            }
+            else if (v.Contains("\n"))
+            {
+                lines = v.Split('\n').Select(s => Spectre.Console.Markup.Escape(s)).ToArray();
+            }
+            else
+            {
+                lines = new[] { Spectre.Console.Markup.Escape(v) };
+            }
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (i == 0)
+                {
+                    table.AddRow($"[white]{k}[/]", $"[yellow]{safeType}[/]", $"[bold cyan]{lines[i]}[/]");
+                }
+                else
+                {
+                    table.AddRow("", "", $"[bold cyan]{lines[i]}[/]");
+                }
+            }
         }
 
         return table;

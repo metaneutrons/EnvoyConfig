@@ -1,12 +1,13 @@
+using System;
 using EnvoyConfig.Logging;
 using Serilog;
-using System;
 
 namespace EnvoyConfig.Adapters.Serilog
 {
     public class SerilogLoggerAdapter : IEnvLogSink
     {
         private readonly ILogger _logger;
+
         public SerilogLoggerAdapter(ILogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
