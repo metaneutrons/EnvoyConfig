@@ -31,7 +31,9 @@ public class Dictionary
         foreach (System.Collections.DictionaryEntry e in Environment.GetEnvironmentVariables())
         {
             if (e.Key is string k && k.StartsWith("MAP_"))
+            {
                 Environment.SetEnvironmentVariable(k, null);
+            }
         }
     }
 

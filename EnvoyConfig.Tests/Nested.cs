@@ -23,8 +23,15 @@ public class Nested
     public void Loads_Nested_Object_With_Prefix()
     {
         Environment.SetEnvironmentVariable("PARENT_CHILD_VAL", "99");
-        var config = EnvConfig.Load<Parent>();
-        Assert.NotNull(config.Child);
-        Assert.Equal(99, config.Child!.Value);
+        try
+        {
+            var config = EnvConfig.Load<Parent>();
+            Assert.NotNull(config.Child);
+            Assert.Equal(99, config.Child!.Value);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PARENT_CHILD_VAL", null);
+        }
     }
 }
