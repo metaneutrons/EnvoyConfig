@@ -26,7 +26,11 @@ internal static class ReflectionHelper
     /// <param name="logger">Optional logger for warnings and errors.</param>
     /// <param name="globalPrefix">Optional global prefix for all lookups.</param>
     /// <returns>The populated configuration object.</returns>
-    public static T PopulateInstance<T>(IEnvLogSink? logger = null, string? globalPrefix = null)
+    public static T PopulateInstance<T>(
+        IEnvLogSink? logger = null,
+        string? globalPrefix = null,
+        Dictionary<string, string>? variables = null
+    )
         where T : new()
     {
         var type = typeof(T);
@@ -56,6 +60,13 @@ internal static class ReflectionHelper
                     if (string.IsNullOrEmpty(str) && attr.Default != null)
                     {
                         str = attr.Default;
+                        if (variables != null && str != null)
+                        {
+                            foreach (var kv in variables)
+                            {
+                                str = str.Replace($"{{{kv.Key}}}", kv.Value);
+                            }
+                        }
                     }
                     value = ParseList(str, prop.PropertyType, attr.ListSeparator, logger, envKey);
                 }
@@ -67,6 +78,13 @@ internal static class ReflectionHelper
                     if ((str == null || str == "") && attr.Default != null)
                     {
                         str = attr.Default;
+                        if (variables != null && str != null)
+                        {
+                            foreach (var kv in variables)
+                            {
+                                str = str.Replace($"{{{kv.Key}}}", kv.Value);
+                            }
+                        }
                     }
 
                     value = ConvertToType(str, prop.PropertyType, logger, envKey);
@@ -81,18 +99,18 @@ internal static class ReflectionHelper
                 {
                     value = ParseMap(prefix + attr.MapPrefix, prop.PropertyType, logger, attr.MapKeyCasing);
                 }
-                // Nested Object
+                // Nested object with prefix
                 else if (!string.IsNullOrEmpty(attr.NestedPrefix))
                 {
-                    var nestedObj = Activator.CreateInstance(prop.PropertyType);
-                    if (nestedObj != null)
-                    {
-                        var nested = typeof(ReflectionHelper)
-                            .GetMethod(nameof(PopulateInstance), BindingFlags.Public | BindingFlags.Static)!
-                            .MakeGenericMethod(prop.PropertyType)
-                            .Invoke(null, new object?[] { logger, prefix + attr.NestedPrefix });
-                        value = nested;
-                    }
+                    var nestedType = prop.PropertyType;
+                    var nestedInstance = typeof(ReflectionHelper)
+                        .GetMethod(
+                            nameof(PopulateInstance),
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+                        )!
+                        .MakeGenericMethod(nestedType)
+                        .Invoke(null, new object?[] { logger, prefix + attr.NestedPrefix, null });
+                    value = nestedInstance;
                 }
                 // List of nested objects (NestedListPrefix/NestedListSuffix)
                 else if (!string.IsNullOrEmpty(attr.NestedListPrefix) && !string.IsNullOrEmpty(attr.NestedListSuffix))
@@ -124,7 +142,10 @@ internal static class ReflectionHelper
             if (type == typeof(int))
             {
                 if (string.IsNullOrEmpty(str))
+                {
                     return 0;
+                }
+
                 if (!int.TryParse(str, out var i))
                 {
                     logger?.Log(EnvLogLevel.Error, $"Failed to convert '{envKey}' value '{str}' to int");
@@ -136,7 +157,10 @@ internal static class ReflectionHelper
             if (type == typeof(bool))
             {
                 if (string.IsNullOrEmpty(str))
+                {
                     return false;
+                }
+
                 if (!bool.TryParse(str, out var b))
                 {
                     logger?.Log(EnvLogLevel.Error, $"Failed to convert '{envKey}' value '{str}' to bool");
@@ -148,21 +172,30 @@ internal static class ReflectionHelper
             if (type == typeof(double))
             {
                 if (string.IsNullOrEmpty(str))
+                {
                     return 0.0;
+                }
+
                 return double.TryParse(str, out var d) ? d : 0.0;
             }
 
             if (type == typeof(float))
             {
                 if (string.IsNullOrEmpty(str))
+                {
                     return 0f;
+                }
+
                 return float.TryParse(str, out var f) ? f : 0f;
             }
 
             if (type == typeof(long))
             {
                 if (string.IsNullOrEmpty(str))
+                {
                     return 0L;
+                }
+
                 return long.TryParse(str, out var l) ? l : 0L;
             }
 
@@ -195,15 +228,24 @@ internal static class ReflectionHelper
         {
             // Return an empty list/array instead of null instance for lists
             if (type.IsArray)
+            {
                 return Array.CreateInstance(type.GetElementType()!, 0);
+            }
+
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+            {
                 return Activator.CreateInstance(type);
+            }
+
             return Activator.CreateInstance(type);
         }
 
         var elemType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments.FirstOrDefault();
         if (elemType == null)
+        {
             throw new InvalidOperationException("Element type cannot be determined.");
+        }
+
         var items = str.Split(sep).Select(s => ConvertToType(s.Trim(), elemType, logger, envKey)).ToList();
         if (type.IsArray)
         {
@@ -229,7 +271,10 @@ internal static class ReflectionHelper
     {
         var elemType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments.FirstOrDefault();
         if (elemType == null)
+        {
             throw new InvalidOperationException("Element type cannot be determined.");
+        }
+
         var items = new List<object?>();
         for (var i = 1; ; i++)
         {
@@ -300,7 +345,10 @@ internal static class ReflectionHelper
             }
             var dictKeyObj = ConvertToType(dictKey, args[0], logger, key);
             if (dictKeyObj == null)
+            {
                 throw new InvalidOperationException("Dictionary key cannot be null.");
+            }
+
             var val = ConvertToType(env.Value?.ToString(), args[1], logger, key);
             dict!.Add(dictKeyObj, val);
         }
@@ -312,7 +360,10 @@ internal static class ReflectionHelper
     {
         // Only works for List<T>
         if (!listType.IsGenericType || listType.GetGenericTypeDefinition() != typeof(List<>))
+        {
             throw new InvalidOperationException("NestedListPrefix only supported for List<T>");
+        }
+
         var elemType = listType.GenericTypeArguments[0];
         var envVars = Environment.GetEnvironmentVariables();
         var prefix = globalPrefix + (attr.NestedListPrefix ?? "");
@@ -337,13 +388,16 @@ internal static class ReflectionHelper
         {
             // Compose prefix for this nested object
             var nestedPrefix = prefix + idx + suffix;
+            var variables = new Dictionary<string, string> { ["index"] = idx };
             var nested = typeof(ReflectionHelper)
-                .GetMethod(nameof(PopulateInstance), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)!
+                .GetMethod(
+                    nameof(PopulateInstance),
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+                )!
                 .MakeGenericMethod(elemType)
-                .Invoke(null, new object?[] { logger, nestedPrefix });
+                .Invoke(null, new object?[] { logger, nestedPrefix, variables });
             list.Add(nested);
         }
         return list;
     }
 }
-

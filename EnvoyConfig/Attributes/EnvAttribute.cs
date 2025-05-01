@@ -5,14 +5,25 @@ namespace EnvoyConfig.Attributes
     /// <summary>
     /// Marks a property for environment variable initialization.
     /// </summary>
+    /// <summary>
+    /// Specifies casing for keys in MapPrefix dictionary parsing.
+    /// </summary>
     public enum MapKeyCasingMode
     {
+        /// <summary>Keys are converted to lower-case.</summary>
         Lower,
+
+        /// <summary>Keys are converted to upper-case.</summary>
         Upper,
+
+        /// <summary>Keys are left as-is.</summary>
         AsIs,
     }
 
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    /// <summary>
+    /// Attribute to control how environment variables are mapped to config properties.
+    /// </summary>
     public sealed class EnvAttribute : Attribute
     {
         /// <summary>
@@ -60,6 +71,7 @@ namespace EnvoyConfig.Attributes
         /// Example: SNAPDOG_ZONE_1_MQTT_CONTROL_SET_TOPIC, SNAPDOG_ZONE_2_MQTT_CONTROL_SET_TOPIC, etc.
         /// </summary>
         public string? NestedListPrefix { get; set; }
+
         /// <summary>
         /// Suffix after the index for NestedListPrefix. Example: for SNAPDOG_ZONE_1_MQTT_, prefix is ZONE_, suffix is _MQTT_.
         /// </summary>
