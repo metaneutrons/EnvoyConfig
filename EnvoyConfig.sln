@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvoyConfig.Adapters.NLog",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvoyConfig.Tests", "EnvoyConfig.Tests\EnvoyConfig.Tests.csproj", "{9A739753-E665-4CCC-AF31-EF9B34176385}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvoyConfig.Adapters.Serilog", "EnvoyConfig.Adapters.Serilog\EnvoyConfig.Adapters.Serilog.csproj", "{92CEA3DE-EA81-4B08-BF1E-16862373AB06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,5 +41,9 @@ Global
 		{9A739753-E665-4CCC-AF31-EF9B34176385}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1E685F82-E02E-4DEA-B92C-7A92C6925AD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1E685F82-E02E-4DEA-B92C-7A92C6925AD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92CEA3DE-EA81-4B08-BF1E-16862373AB06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92CEA3DE-EA81-4B08-BF1E-16862373AB06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92CEA3DE-EA81-4B08-BF1E-16862373AB06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92CEA3DE-EA81-4B08-BF1E-16862373AB06}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
