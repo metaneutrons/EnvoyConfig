@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <StartupProject>EnvoyConfig.Sample</StartupProject>
+    <Authors>Fabian Schmieder</Authors>
+    <Company>metaneutrons</Company>
+    <DotenvNetVersion>3.1.0</DotenvNetVersion>
+    <SpectreConsoleVersion>0.44.0</SpectreConsoleVersion>
+    <GitVersionMsBuildVersion>6.2.0</GitVersionMsBuildVersion>
+  </PropertyGroup>
+</Project>

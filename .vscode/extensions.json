@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        "ms-dotnettools.csharp", // C# extension from Microsoft
+        "ms-dotnettools.csdevkit", // .NET SDK integration
+        "ms-dotnettools.vscode-dotnet-runtime", // .NET runtime support
+        "editorconfig.editorconfig", // EditorConfig support
+        "jongrant.csharpsortusings", // C# Sort Usings
+        "csharpier.csharpier-vscode", // CSharpier formatter
+        "kreativ-software.csharpextensions", // C# Extensions (new class, etc.)
+        "formulahendry.dotnet-test-explorer", // .NET Test Explorer
+        "github.copilot", // GitHub Copilot
+        "aliasadidev.nugetpackagemanagergui", // NuGet Package Manager GUI
+        "bierner.markdown-preview-github-styles" // GitHub-style Markdown preview
+    ],
+    "unwantedRecommendations": []
+}

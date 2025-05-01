@@ -1,0 +1,46 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run EnvoyConfig.Sample",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-solution",
+      "program": "${workspaceFolder}/EnvoyConfig.Sample/bin/Debug/net8.0/EnvoyConfig.Sample.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/EnvoyConfig.Sample",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "internalConsoleOptions": "openOnSessionStart",
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "SAMPLE_STRING": "Hello from VS Code launch!",
+        "SAMPLE_NUMBER": "42",
+        "SAMPLE_BOOL": "true"
+      }
+    },
+    {
+      "name": "Attach",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    },
+    {
+      "name": ".NET Source Generator Debug",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}",
+      "justMyCode": false
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Sample with Source Generators",
+      "configurations": [
+        "Run EnvoyConfig.Sample",
+        ".NET Source Generator Debug"
+      ],
+      "stopAll": true
+    }
+  ]
+}

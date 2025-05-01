@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: EnvoyConfig Documentation
+    url: https://github.com/metaneutrons/EnvoyConfig#readme
+    about: Check the README for usage information and examples
+  - name: Environment Configuration Documentation
+    url: https://github.com/metaneutrons/EnvoyConfig/wiki
+    about: Reference for configuration patterns and environment variable handling

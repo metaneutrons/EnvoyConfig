@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="EnvoyConfig Rules" Description="StyleCop rules for EnvoyConfig projects" ToolsVersion="16.0">
+  <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+    <!-- Disabled Rules -->
+    <Rule Id="SA0001" Action="None" /> <!-- XML comment analysis is disabled due to project configuration -->
+    <Rule Id="SA1101" Action="None" /> <!-- Prefix local calls with this -->
+    <Rule Id="SA1309" Action="None" /> <!-- Field should not begin with an underscore -->
+    <Rule Id="SA1600" Action="None" /> <!-- Elements should be documented -->
+    <Rule Id="SA1601" Action="None" /> <!-- Partial elements should be documented -->
+    <Rule Id="SA1602" Action="None" /> <!-- Enumeration items should be documented -->
+    <Rule Id="SA1633" Action="None" /> <!-- File should have header -->
+    <Rule Id="SA1652" Action="None" /> <!-- XML documentation should be valid -->
+
+    <!-- Warning Rules -->
+    <Rule Id="SA1200" Action="Warning" /> <!-- Using directives must be placed correctly -->
+    <Rule Id="SA1201" Action="Warning" /> <!-- Elements must appear in the correct order -->
+    <Rule Id="SA1202" Action="Warning" /> <!-- Elements must be ordered by access -->
+    <Rule Id="SA1203" Action="Warning" /> <!-- Constants must appear before fields -->
+    <Rule Id="SA1204" Action="Warning" /> <!-- Static elements must appear before instance elements -->
+    <Rule Id="SA1214" Action="Warning" /> <!-- Readonly fields must appear before non-readonly fields -->
+    <Rule Id="SA1402" Action="Warning" /> <!-- File may only contain a single type -->
+    <Rule Id="SA1413" Action="Warning" /> <!-- Use trailing comma in multi-line initializers -->
+    <Rule Id="SA1516" Action="Warning" /> <!-- Elements must be separated by blank line -->
+
+    <!-- Rules specific to EnvoyConfig -->
+    <Rule Id="SA1649" Action="Warning" /> <!-- File name must match first type name -->
+  </Rules>
+</RuleSet>
