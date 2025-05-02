@@ -3,33 +3,21 @@ namespace EnvoyConfig.Attributes
     using System;
 
     /// <summary>
-    /// Marks a property for environment variable initialization.
-    /// </summary>
-    public enum MapKeyCasingMode
-    {
-        /// <summary>Keys are converted to lower-case.</summary>
-        Lower,
-
-        /// <summary>Keys are converted to upper-case.</summary>
-        Upper,
-
-        /// <summary>Keys are left as-is.</summary>
-        AsIs,
-    }
-
-    /// <summary>
-    /// Attribute to control how environment variables are mapped to config properties.
+    /// Specifies the environment variable to map to a class property
+    /// when using <see cref="EnvConfig.Load{T}"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public sealed class EnvAttribute : Attribute
     {
         /// <summary>
-        /// The environment variable key to map to this property.
+        /// Gets the name (key) of the environment variable to read from.
         /// </summary>
         public string? Key { get; set; }
 
         /// <summary>
-        /// The default value to use if the environment variable is not set. Can be string, int, bool, etc.
+        /// Gets or sets the default value to use if the environment variable
+        /// specified by <see cref="Key"/> is not found or is empty.
+        /// The value must be convertible to the target property's type.
         /// </summary>
         public object? Default { get; set; }
 
@@ -73,5 +61,40 @@ namespace EnvoyConfig.Attributes
         /// Suffix after the index for NestedListPrefix. Example: for SNAPDOG_ZONE_1_MQTT_, prefix is ZONE_, suffix is _MQTT_.
         /// </summary>
         public string? NestedListSuffix { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnvAttribute"/> class with no key.
+        /// Allows use with ListPrefix, MapPrefix, etc.
+        /// </summary>
+        public EnvAttribute() { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnvAttribute"/> class.
+        /// </summary>
+        /// <param name="key">The name (key) of the environment variable.</param>
+        /// <exception cref="ArgumentNullException">Thrown if key is null or empty.</exception>
+        public EnvAttribute(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            Key = key;
+        }
+    }
+
+    /// <summary>
+    /// Specifies casing options for environment variable map keys.
+    /// </summary>
+    public enum MapKeyCasingMode
+    {
+        /// <summary>Keys are converted to lower-case.</summary>
+        Lower,
+
+        /// <summary>Keys are converted to upper-case.</summary>
+        Upper,
+
+        /// <summary>Keys are left as-is.</summary>
+        AsIs,
     }
 }

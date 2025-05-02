@@ -63,10 +63,7 @@ internal class Program
         PrintSection(
             "System",
             "⚙️",
-            [
-                ("Environment", typeof(string).Name, config.Env),
-                ("Log Level", typeof(string).Name, config.LogLevel)
-            ]
+            [("Environment", typeof(string).Name, config.Env), ("Log Level", typeof(string).Name, config.LogLevel)]
         );
         PrintSection(
             "Telemetry",
@@ -74,7 +71,7 @@ internal class Program
             [
                 ("Enabled", typeof(bool).Name, config.TelemetryEnabled.ToString()),
                 ("Service Name", typeof(string).Name, config.TelemetryServiceName),
-                ("Sampling Rate", typeof(int).Name, config.TelemetrySamplingRate.ToString())
+                ("Sampling Rate", typeof(int).Name, config.TelemetrySamplingRate.ToString()),
             ]
         );
         PrintSection(
@@ -83,7 +80,7 @@ internal class Program
             [
                 ("Enabled", typeof(bool).Name, config.PrometheusEnabled.ToString()),
                 ("Path", typeof(string).Name, config.PrometheusPath),
-                ("Port", typeof(int).Name, config.PrometheusPort.ToString())
+                ("Port", typeof(int).Name, config.PrometheusPort.ToString()),
             ]
         );
         PrintSection(
@@ -93,7 +90,7 @@ internal class Program
                 ("Enabled", typeof(bool).Name, config.JaegerEnabled.ToString()),
                 ("Endpoint", typeof(string).Name, config.JaegerEndpoint),
                 ("Agent Host", typeof(string).Name, config.JaegerAgentHost),
-                ("Agent Port", typeof(int).Name, config.JaegerAgentPort.ToString())
+                ("Agent Port", typeof(int).Name, config.JaegerAgentPort.ToString()),
             ]
         );
         PrintSection(
@@ -101,7 +98,7 @@ internal class Program
             "🔑",
             [
                 ("Enabled", typeof(bool).Name, config.ApiAuthEnabled.ToString()),
-                ("API Keys", "string[]", string.Join(", ", config.ApiKeys))
+                ("API Keys", "string[]", string.Join(", ", config.ApiKeys)),
             ]
         );
         PrintSection("Zones", "🗺️", [("Zones", "string[]", string.Join(", ", config.Zones))]);

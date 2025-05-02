@@ -23,6 +23,7 @@ msbuild.wrn
 project.lock.json
 project.fragment.lock.json
 artifacts/
+_site/
 
 # Visual Studio files
 .vs/
