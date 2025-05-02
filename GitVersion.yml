@@ -3,6 +3,7 @@ assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatch
 assembly-informational-format: '{InformationalVersion}'
 tag-prefix: '[vV]'
+next-version: 0.1.0
 
 branches:
   main:
