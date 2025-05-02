@@ -2,7 +2,7 @@
   <img src="assets/logo.svg" alt="EnvoyConfig Logo" width="64"/>
 </p>
 
-# EnvoyConfig
+# 🚀 EnvoyConfig
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/metaneutrons/EnvoyConfig/actions)
 [![NuGet](https://img.shields.io/nuget/v/EnvoyConfig)](https://www.nuget.org/packages/EnvoyConfig)
@@ -10,23 +10,7 @@
 
 **EnvoyConfig** is a modern C# library for .NET 8+ that loads strongly-typed configuration objects from environment variables at runtime using reflection. It supports advanced attribute-based mapping, type safety, nested objects, lists, dictionaries, and flexible prefixing—all with minimal boilerplate.
 
-## Features
-
----
-
-### 📚 Documentation
-
-- This project uses [DocFX](https://dotnet.github.io/docfx/) to generate API and conceptual documentation.
-- The latest generated documentation is available in the [`_site/`](./_site/) directory after running `docfx build`.
-- To build the docs locally, run:
-  ```sh
-  docfx docfx.json
-  ```
-- The logo is integrated into the documentation site and this README.
-
----
-
-
+## ✨ Features
 
 - Attribute-based configuration: `[Env]` attribute for mapping properties to env vars
 - Supports primitives, enums, nullable types, lists, arrays, dictionaries, and nested objects
@@ -36,7 +20,7 @@
 - Thread-safe, high performance (caching)
 - Zero external dependencies in core
 
-## Installation
+## 📦 Installation
 
 ```bash
 dotnet add package EnvoyConfig
@@ -48,7 +32,7 @@ _Optional:_
 dotnet add package EnvoyConfig.Adapters.Microsoft  # For Microsoft.Extensions.Logging
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ```csharp
 public class MyConfig {
@@ -63,7 +47,7 @@ EnvConfig.GlobalPrefix = "MYAPP_";
 var config = EnvConfig.Load<MyConfig>();
 ```
 
-## Advanced Usage & Features
+## 🔧 Advanced Usage & Features
 
 - **Prefix Handling:** Set `EnvConfig.GlobalPrefix` to prepend to all lookups.
 - **Attribute Modes:**
@@ -75,17 +59,21 @@ var config = EnvConfig.Load<MyConfig>();
 - **Supported Types:** string, int, bool, double, enums, nullable types, List<T>, T[], Dictionary<TKey,TValue>
 - **Logging:** Pass a custom logger (`IEnvLogSink`) or use an adapter for your framework.
 
-## Troubleshooting / FAQ
+## 📚 Documentation
+
+See here for [Documentation](https://metaneutrons.github.io/EnvoyConfig).
+
+## 🛠️ Troubleshooting / FAQ
 
 - Type conversion errors: check env var values and types
 - Missing env vars: use `Default` or handle nulls
 - Prefix confusion: ensure GlobalPrefix and attribute keys are set as intended
 - Logging: implement or use provided adapters for structured logs
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please open issues or PRs for bugs, features, or questions.
 
-## License
+## 📜 License
 
 GPL-3.0-or-later. See [LICENSE](LICENSE).
