@@ -12,13 +12,13 @@ branches:
     regex: ^main$
     increment: Patch
     is-release-branch: true
-    tag: ''  # No prerelease tag on main → e.g., 1.2.3
+    label: ''  # No prerelease label on main → e.g., 1.2.3
 
   develop:
     regex: ^develop$
     increment: Minor
     is-release-branch: false
-    tag: alpha  # This enables prerelease tags like 0.2.0-alpha.5
+    label: alpha  # This enables prerelease versions like 0.2.0-alpha.5
     track-merge-target: false
     prevent-increment-of-merged-branch-version: true
 
