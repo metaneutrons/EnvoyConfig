@@ -12,5 +12,6 @@
     <Authors>Fabian Schmieder</Authors>
     <Company>metaneutrons</Company>
     <Copyright>GPL-3.0-or-later</Copyright>
-  </PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+</PropertyGroup>
 </Project>

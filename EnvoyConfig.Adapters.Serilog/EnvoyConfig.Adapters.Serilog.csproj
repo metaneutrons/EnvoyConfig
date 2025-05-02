@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+</PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../EnvoyConfig/EnvoyConfig.csproj" />
-    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog" />
   </ItemGroup>
 </Project>
