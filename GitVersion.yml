@@ -20,7 +20,6 @@ branches:
     is-release-branch: false
     label: alpha  # This enables prerelease versions like 0.2.0-alpha.5
     track-merge-target: false
-    prevent-increment-of-merged-branch-version: true
 
 ignore:
   sha: []
