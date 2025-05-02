@@ -57,7 +57,7 @@ EnvoyConfig is a modern C# library designed for .NET 8 applications, simplifying
 
       With environment variables:
 
-      ```
+      ```env
       ZONE_1_MQTT_CONTROL_SET_TOPIC=control/set
       ZONE_1_MQTT_TRACK_SET_TOPIC=track/set
       ZONE_2_MQTT_CONTROL_SET_TOPIC=control/set2
@@ -343,7 +343,7 @@ Overview: Steps optimized for execution via Windsurf AI using GPT-4.1, referenci
    - Configure MSTest & Moq
    - Write unit tests for every attribute mode & logging
 
-6. Build Sample App ([4.4 EnvoyConfig.Sample](#44-envoyconfig-sample-net80))
+6. Build Sample App ([4.4 EnvoyConfig.Sample](#44-envoyconfigsample-net80))
    - Scaffold sample project, configure logging adapter
    - Demonstrate all modes with example classes & env vars
 
@@ -351,5 +351,5 @@ Overview: Steps optimized for execution via Windsurf AI using GPT-4.1, referenci
    - Draft `README.md` per outline
    - Ensure full XML comments in public APIs
 
-8. Configure CI/CD ([5.1 Build Process](#51-build-process), [5.2 Testing](#52-testing), [5.3 Packaging](#53-packaging), [5.4 CI/CD](#54-cicd))
+8. Configure CI/CD ([5.1 Build Process](#51-build-process), [5.2 Testing](#52-testing), [5.3 Packaging](#53-packaging-dotnet-pack), [5.4 CI/CD](#54-cicd))
    - Define GitHub Actions for build, test, pack, publish
