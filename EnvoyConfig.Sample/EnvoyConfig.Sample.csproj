@@ -3,6 +3,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>EnvoyConfig.Sample</RootNamespace>
     <Nullable>enable</Nullable>
