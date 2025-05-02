@@ -1,0 +1,61 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": ["EnvoyConfig.csproj"],
+          "exclude": ["**/bin/**", "**/obj/**"],
+          "src": "EnvoyConfig"
+        },
+        {
+          "files": ["EnvoyConfig.Adapters.Serilog.csproj"],
+          "exclude": ["**/bin/**", "**/obj/**"],
+          "src": "EnvoyConfig.Adapters.Serilog"
+        },
+        {
+          "files": ["EnvoyConfig.Adapters.Microsoft.csproj"],
+          "exclude": ["**/bin/**", "**/obj/**"],
+          "src": "EnvoyConfig.Adapters.Microsoft"
+        },
+        {
+          "files": ["EnvoyConfig.Adapters.NLog.csproj"],
+          "exclude": ["**/bin/**", "**/obj/**"],
+          "src": "EnvoyConfig.Adapters.NLog"
+        }
+      ]
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": ["index.md", "articles/*.md", "blueprint.md", "toc.yml"],
+        "src": "docs"
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "assets/logo.svg",
+          "assets/favicon.svg"
+        ],
+        "src": "."
+      }
+    ],
+    "overwrite": [],
+    "dest": "_site",
+    "template": ["modern", "default"],
+    "postProcessors": ["ExtractSearchIndex"],
+    "globalMetadata": {
+      "_appLogoPath": "assets/logo.svg",
+      "_favicon": "assets/favicon.svg"
+    },
+    "noLangKeyword": false
+  },
+  "api": [
+    {
+      "src": ["api/**.yml"],
+      "dest": "api"
+    }
+  ],
+  "toc": "docs/toc.yml"
+}

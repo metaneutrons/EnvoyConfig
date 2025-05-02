@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="EnvoyConfig Logo" width="64"/>
+</p>
+
 # EnvoyConfig
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/metaneutrons/EnvoyConfig/actions)
@@ -7,6 +11,22 @@
 **EnvoyConfig** is a modern C# library for .NET 8+ that loads strongly-typed configuration objects from environment variables at runtime using reflection. It supports advanced attribute-based mapping, type safety, nested objects, lists, dictionaries, and flexible prefixing—all with minimal boilerplate.
 
 ## Features
+
+---
+
+### 📚 Documentation
+
+- This project uses [DocFX](https://dotnet.github.io/docfx/) to generate API and conceptual documentation.
+- The latest generated documentation is available in the [`_site/`](./_site/) directory after running `docfx build`.
+- To build the docs locally, run:
+  ```sh
+  docfx docfx.json
+  ```
+- The logo is integrated into the documentation site and this README.
+
+---
+
+
 
 - Attribute-based configuration: `[Env]` attribute for mapping properties to env vars
 - Supports primitives, enums, nullable types, lists, arrays, dictionaries, and nested objects

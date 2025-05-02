@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="30" height="30" viewBox="0 0 200 200"
+    xmlns="http://www.w3.org/2000/svg" role="img" aria-label="EnvoyConfig Logo">
+    <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FF6A00;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#FF0000;stop-opacity:1" />
+        </linearGradient>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.2" />
+        </filter>
+    </defs>
+
+    <!-- Background with rounded corners and red-orange gradient -->
+    <rect width="200" height="200" rx="20" fill="url(#grad1)" filter="url(#shadow)" />
+
+    <!-- Monogram: stylized "E" (middle bar extended into C) -->
+    <g id="monogram" transform="translate(5,0)">
+        <g fill="none" stroke="#FFFFFF" stroke-width="15" stroke-linecap="round">
+            <path d="M40,60 H100" />
+            <path d="M40,100 H105" />
+            <path d="M40,140 H100" />
+        </g>
+
+        <!-- Monogram: stylized "C" (centered vertically with E) -->
+        <path d="M150,60 a30,30 0 1,0 0,80" fill="none" stroke="#FFFFFF" stroke-width="15"
+            stroke-linecap="round" />
+    </g>
+</svg>

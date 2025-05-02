@@ -111,6 +111,22 @@
       ],
       "problemMatcher": "$msCompile",
       "group": "build"
+    },
+    {
+      "label": "Build Documentation (DocFX)",
+      "type": "shell",
+      "command": "docfx",
+      "args": [
+        "build",
+        "docfx.json"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     }
   ]
 }
