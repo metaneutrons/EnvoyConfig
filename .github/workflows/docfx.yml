@@ -9,7 +9,7 @@ on:
       - "EnvoyConfig*/**/*.cs"
       - "*.sln"
       - "**/*.csproj"
-      - ".github/workflows/docs.yml" # Trigger if this workflow itself changes
+      - ".github/workflows/docfx.yml" # Trigger if this workflow itself changes
 
   # Trigger on pull requests targeting main or develop
   pull_request:
@@ -65,6 +65,7 @@ jobs:
   deploy_docs:
     name: Deploy Documentation
     needs: build_docs
+    # Deploy only when pushing directly to the main branch
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
