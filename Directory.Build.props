@@ -5,7 +5,6 @@
     <Company>metaneutrons</Company>
     <DotenvNetVersion>3.1.0</DotenvNetVersion>
     <SpectreConsoleVersion>0.44.0</SpectreConsoleVersion>
-    <GitVersionMsBuildVersion>6.2.0</GitVersionMsBuildVersion>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -13,10 +12,15 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);NU1604</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
-    <Copyright>Copyright $([System.DateTime]::Now.Year)</Copyright>
+
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Copyright>Copyright $([System.DateTime]::Now.Year) Fabian Schmieder</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/metaneutrons/EnvoyConfig</RepositoryUrl>
@@ -27,5 +31,9 @@
     <Using Include="System.Collections.Generic" />
     <Using Include="System.Linq" />
     <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+
+  <ItemGroup>
+
   </ItemGroup>
 </Project>

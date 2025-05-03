@@ -2,29 +2,25 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build-solution",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}/EnvoyConfig.sln",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
+      "label": "restore-dotnet-tools",
+      "type": "shell",
+      "command": "dotnet tool restore",
+      "problemMatcher": []
+    },
+    {
+      "label": "build-with-gitversion",
+      "type": "shell",
+      "dependsOn": ["restore-dotnet-tools"],
+      "command": "VERSION=$(dotnet gitversion /showvariable FullSemVer) && echo Building with version $VERSION && dotnet build -p:Version=$VERSION ${workspaceFolder}/EnvoyConfig.sln -c Release",
       "problemMatcher": "$msCompile",
       "group": "build"
     },
     {
       "label": "run-sample",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "run",
-        "--project",
-        "${workspaceFolder}/EnvoyConfig.Sample/EnvoyConfig.Sample.csproj"
-      ],
+      "type": "shell",
+      "dependsOn": ["build-with-gitversion"],
+      "command": "dotnet run --project ${workspaceFolder}/EnvoyConfig.Sample/EnvoyConfig.Sample.csproj",
       "problemMatcher": "$msCompile",
-      "dependsOn": "build-solution",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -98,17 +94,10 @@
       "problemMatcher": []
     },
     {
-      "label": "pack",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "pack",
-        "${workspaceFolder}/EnvoyConfig/EnvoyConfig.csproj",
-        "-c",
-        "Release",
-        "-o",
-        "${workspaceFolder}/artifacts"
-      ],
+      "label": "pack-with-gitversion",
+      "type": "shell",
+      "dependsOn": ["restore-dotnet-tools"],
+      "command": "VERSION=$(dotnet gitversion /showvariable FullSemVer) && echo Packing with version $VERSION && dotnet pack -p:Version=$VERSION ${workspaceFolder}/EnvoyConfig/EnvoyConfig.csproj -c Release -o ${workspaceFolder}/artifacts",
       "problemMatcher": "$msCompile",
       "group": "build"
     },
