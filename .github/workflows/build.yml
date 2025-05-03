@@ -63,7 +63,7 @@ jobs:
         run: dotnet restore
 
       - name: Run tests
-        run: dotnet test EnvoyConfig.sln --no-build --verbosity normal
+        run: dotnet test EnvoyConfig.Tests/EnvoyConfig.Tests.csproj --verbosity normal
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
