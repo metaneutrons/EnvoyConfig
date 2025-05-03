@@ -25,7 +25,7 @@ jobs:
           echo "Publishing version: ${{ github.event.inputs.version_tag }}"
 
       - name: Download release NuGet packages
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: tag-release.yml
           workflow_conclusion: success
