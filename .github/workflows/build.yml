@@ -12,6 +12,8 @@ on:
   push:
     branches: [main, develop]
     paths-ignore:
+      - ".gitignore"
+      - ".github/**"
       - "**/*.md"
       - "docs/**"
   # Handle pull requests separately
@@ -31,13 +33,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Check if push includes a version tag
         id: check-tag
         run: |
           # Get the tag for the current commit, if any
           TAG=$(git tag --points-at HEAD | grep -E "^v[0-9]" || echo "")
-          
+
           # Output whether we have a version tag
           if [ -n "$TAG" ]; then
             echo "has-tag=true" >> $GITHUB_OUTPUT
