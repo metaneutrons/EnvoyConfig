@@ -26,7 +26,9 @@ public class SerilogAdapterTests
     private class CollectingSink : ILogEventSink
     {
         private readonly List<LogEvent> _events;
+
         public CollectingSink(List<LogEvent> events) => this._events = events;
+
         public void Emit(LogEvent logEvent) => this._events.Add(logEvent);
     }
 }

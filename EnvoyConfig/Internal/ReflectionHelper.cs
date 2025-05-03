@@ -10,9 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Handles reflection, attribute discovery, and instance population.
-/// </summary>
-/// <summary>
 /// Handles reflection, attribute discovery, and instance population for EnvConfig.
 /// </summary>
 public static class ReflectionHelper
@@ -127,10 +124,7 @@ public static class ReflectionHelper
                 {
                     var nestedType = prop.PropertyType;
                     var nestedInstance = typeof(ReflectionHelper)
-                        .GetMethod(
-                            nameof(PopulateInstance),
-                            BindingFlags.Public | BindingFlags.Static
-                        )!
+                        .GetMethod(nameof(PopulateInstance), BindingFlags.Public | BindingFlags.Static)!
                         .MakeGenericMethod(nestedType)
                         .Invoke(null, [logger, prefix + attr.NestedPrefix, null]);
                     value = nestedInstance;
@@ -413,10 +407,7 @@ public static class ReflectionHelper
             var nestedPrefix = prefix + idx + suffix;
             var variables = new Dictionary<string, string> { ["index"] = idx };
             var nested = typeof(ReflectionHelper)
-                .GetMethod(
-                    nameof(PopulateInstance),
-                    BindingFlags.Public | BindingFlags.Static
-                )!
+                .GetMethod(nameof(PopulateInstance), BindingFlags.Public | BindingFlags.Static)!
                 .MakeGenericMethod(elemType)
                 .Invoke(null, [logger, nestedPrefix, variables]);
             list.Add(nested);

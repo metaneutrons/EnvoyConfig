@@ -1,6 +1,6 @@
+using System;
 using EnvoyConfig.Internal;
 using EnvoyConfig.Logging;
-using System;
 
 namespace EnvoyConfig;
 
