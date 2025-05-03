@@ -8,7 +8,6 @@
     <LangVersion>latest</LangVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <PackageLicenseFile>..\LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../EnvoyConfig/EnvoyConfig.csproj" />
@@ -16,6 +15,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="" Visible="false" />
-    <None Include="..\LICENSE" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 </Project>

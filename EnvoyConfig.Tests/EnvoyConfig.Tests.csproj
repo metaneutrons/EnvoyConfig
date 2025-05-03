@@ -15,7 +15,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <PackageLicenseFile>..\LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit" />
@@ -48,6 +47,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="" Visible="false" />
-    <None Include="..\LICENSE" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 </Project>
