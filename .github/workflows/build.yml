@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 on:
-  # Run on branch pushes
+  workflow_dispatch:
   push:
     branches: [main, develop]
     paths-ignore:
@@ -16,7 +16,6 @@ on:
       - ".github/**"
       - "**/*.md"
       - "docs/**"
-  # Handle pull requests separately
   pull_request:
     branches: [main, develop]
     paths-ignore:
