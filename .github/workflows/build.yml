@@ -20,6 +20,8 @@ on:
   pull_request:
     branches: [main, develop]
     paths-ignore:
+      - ".gitignore"
+      - ".github/**"
       - "**/*.md"
       - "docs/**"
 
@@ -62,7 +64,7 @@ jobs:
         run: dotnet restore
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test EnvoyConfig/EnvoyConfig.sln --no-build --verbosity normal
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
