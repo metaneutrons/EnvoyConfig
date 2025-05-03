@@ -22,14 +22,22 @@
           "exclude": ["**/bin/**", "**/obj/**"],
           "src": "EnvoyConfig.Adapters.NLog"
         }
-      ]
+      ],
+      "dest": "docs/api",
+      "manifest": "docs/.manifest"
     }
   ],
   "build": {
     "content": [
       {
+        "files": ["*.yml", "index.md"],
+        "src": "docs/api",
+        "dest": "api"
+      },
+      {
         "files": ["index.md", "articles/*.md", "blueprint.md", "toc.yml"],
-        "src": "docs"
+        "src": "docs",
+        "toc": "toc.yml"
       }
     ],
     "resource": [
@@ -43,18 +51,28 @@
     ],
     "overwrite": [],
     "dest": "_site",
-    "template": ["modern", "default"],
+    "template": ["default", "docs/templates/SingulinkFX/singulinkfx"],
     "postProcessors": ["ExtractSearchIndex"],
     "globalMetadata": {
+      "_appTitle": "EnvoyConfig",
+      "_appName": "Documentation",
+      "_appFaviconPath": "assets/favicon.svg",
       "_appLogoPath": "assets/logo.svg",
-      "_favicon": "assets/favicon.svg"
+      "_appFooter": "<strong>DocFX + Singulink = ♥</strong>",
+      "_copyrightFooter": "© Fabian Schmieder. Licensed under GPL3",
+      "_enableSearch": true,
+      "_disableSideFilter": false,
+      "_enableNewTab": true,
+      "_disableContribution": false,
+      "_disableBreadcrumb": false
     },
     "noLangKeyword": false
   },
   "api": [
     {
       "src": ["api/**.yml"],
-      "dest": "api"
+      "dest": "docs/api",
+      "manifest": "docs/.manifest"
     }
   ],
   "toc": "docs/toc.yml"

@@ -8,9 +8,26 @@
       "problemMatcher": []
     },
     {
+      "label": "docfx-metadata",
+      "type": "shell",
+      "command": "docfx metadata docfx.json",
+      "problemMatcher": []
+    },
+    {
+      "label": "docfx-build",
+      "type": "shell",
+      "dependsOn": [
+        "docfx-metadata"
+      ],
+      "command": "docfx build docfx.json",
+      "problemMatcher": []
+    }
+    {
       "label": "build-with-gitversion",
       "type": "shell",
-      "dependsOn": ["restore-dotnet-tools"],
+      "dependsOn": [
+        "restore-dotnet-tools"
+      ],
       "command": "VERSION=$(dotnet gitversion /showvariable FullSemVer) && echo Building with version $VERSION && dotnet build -p:Version=$VERSION ${workspaceFolder}/EnvoyConfig.sln -c Release",
       "problemMatcher": "$msCompile",
       "group": "build"
@@ -18,7 +35,9 @@
     {
       "label": "run-sample",
       "type": "shell",
-      "dependsOn": ["build-with-gitversion"],
+      "dependsOn": [
+        "build-with-gitversion"
+      ],
       "command": "dotnet run --project ${workspaceFolder}/EnvoyConfig.Sample/EnvoyConfig.Sample.csproj",
       "problemMatcher": "$msCompile",
       "group": {
@@ -96,7 +115,9 @@
     {
       "label": "pack-with-gitversion",
       "type": "shell",
-      "dependsOn": ["restore-dotnet-tools"],
+      "dependsOn": [
+        "restore-dotnet-tools"
+      ],
       "command": "VERSION=$(dotnet gitversion /showvariable FullSemVer) && echo Packing with version $VERSION && dotnet pack -p:Version=$VERSION ${workspaceFolder}/EnvoyConfig/EnvoyConfig.csproj -c Release -o ${workspaceFolder}/artifacts",
       "problemMatcher": "$msCompile",
       "group": "build"

@@ -203,6 +203,5 @@ tye.yaml
 *.7z
 *.rar
 
-# explicit local files
-.claudecode
-.aider*
+# Ignore DocFX API YAML output (generated)
+docs/api/*

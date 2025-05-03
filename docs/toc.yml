@@ -18,3 +18,5 @@
   href: articles/best-practices.md
 - name: Development Blueprint
   href: blueprint.md
+- name: API Reference
+  href: api/EnvoyConfig.yml
