@@ -1,4 +1,3 @@
-using System;
 using EnvoyConfig.Internal;
 using EnvoyConfig.Logging;
 
@@ -6,7 +5,7 @@ namespace EnvoyConfig;
 
 /// <summary>
 /// Provides static methods for loading configuration from environment variables
-/// or .env files into strongly-typed classes using the [Env] attribute.
+/// or .env files into strongly typed classes using the [Env] attribute.
 /// </summary>
 public static class EnvConfig
 {
@@ -22,7 +21,7 @@ public static class EnvConfig
     /// <typeparam name="T">The type of the configuration class to populate. Must have a parameterless constructor.</typeparam>
     /// <param name="logger">Optional logger for warnings and errors.</param>
     /// <returns>A new instance of <typeparamref name="T"/> populated with configuration values.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if mapping fails (e.g., type conversion error, missing required variable without default).</exception>
+    /// <exception cref="InvalidOperationException">Thrown if mapping fails (e.g., type conversion error, missing required variable without a default).</exception>
     /// <remarks>
     /// This method uses reflection to find properties marked with the <see cref="Attributes.EnvAttribute"/>.
     /// It attempts to retrieve the corresponding environment variable and convert it to the property's type.
