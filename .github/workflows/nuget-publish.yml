@@ -45,63 +45,7 @@ jobs:
           for pkg in ./artifacts/*.nupkg; do
             if [ -f "$pkg" ]; then
               echo "Publishing $pkg..."
-              dotnet nuget push "$pkg" --api-key "$NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+              dotnet nuget push "$pkg" --api-key "$NUGET_API_KEY" \
+                --source "https://api.nuget.org/v3/index.json" --skip-duplicate
             fi
           done
-
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: `✅ Publishing confirmed by @${approver}. Proceeding with NuGet.org publishing.`
-            });
-
-            // Set output using the core module (automatically available in GitHub Actions script context)
-            core.setOutput('status', 'confirmed');
-            console.log('Setting status output to confirmed');
-            return 'confirmed';
-
-      - name: Debug Output
-        run: |
-          echo "Confirmation status: ${{ steps.wait_confirmation.outputs.status }}"
-          echo "Confirmation result: ${{ steps.wait_confirmation.outputs.result }}"
-          echo "All outputs:"
-          echo "${{ toJSON(steps.wait_confirmation.outputs) }}"
-
-      # Capture the output from the wait_confirmation step
-      - name: Set Confirmation Status
-        id: confirmation_status
-        run: |
-          if [[ "${{ steps.wait_confirmation.outputs.result }}" == "confirmed" || "${{ steps.wait_confirmation.outputs.status }}" == "confirmed" ]]; then
-            echo "Publishing was confirmed by admin"
-            echo "status=confirmed" >> $GITHUB_OUTPUT
-          else
-            echo "Publishing was NOT confirmed"
-            echo "status=not_confirmed" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Publish to NuGet.org
-        if: steps.confirmation_status.outputs.status == 'confirmed'
-        run: |
-          echo "Publishing to NuGet.org..."
-          dotnet nuget push "./artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
-
-          echo "✅ Package(s) published to NuGet.org successfully!"
-
-      - name: Update publish status
-        if: steps.confirmation_status.outputs.status == 'confirmed'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const issueNumber = ${{ steps.confirm.outputs.result }};
-            const approver = process.env.APPROVER || 'an authorized user';
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: `✅ Package published to NuGet.org successfully!
-
-              **Version:** ${{ github.event.inputs.version_tag }}
-              **Approved by:** @${approver}
-              **Published at:** ${new Date().toISOString()}
-              `
-            });
