@@ -66,10 +66,7 @@ jobs:
         run: dotnet test EnvoyConfig.Tests/EnvoyConfig.Tests.csproj --verbosity normal
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Run code style checks
-        run: dotnet build /p:TreatWarningsAsErrors=true
+        run: dotnet build --configuration Release --no-restore /p:TreatWarningsAsErrors=true
 
       - name: Pack NuGet package
         run: |
