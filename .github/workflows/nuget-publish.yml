@@ -1,5 +1,9 @@
 name: Publish to NuGet.org
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   workflow_dispatch:
     inputs:

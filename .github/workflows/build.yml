@@ -4,6 +4,9 @@ name: Build and Test
 # but NOT for tag pushes which are handled by the tag-release.yml workflow.
 # We also skip this workflow when a version tag was pushed along with commits.
 
+permissions:
+  contents: read
+
 on:
   # Run on branch pushes
   push:
