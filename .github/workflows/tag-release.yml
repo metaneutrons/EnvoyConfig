@@ -43,14 +43,14 @@ jobs:
       - name: Build Release
         run: |
           dotnet build --configuration Release --no-restore \
-            /p:Version=${{ steps.gitversion.outputs.SemVer }} \
-            /p:PackageVersion=${{ steps.gitversion.outputs.NuGetVersion }}
+            /p:Version=${{ steps.gitversion.outputs.semVer }} \
+            /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }}
 
       - name: Pack NuGet package
         run: |
           dotnet pack --configuration Release --no-build -o ./artifacts \
-            /p:Version=${{ steps.gitversion.outputs.SemVer }} \
-            /p:PackageVersion=${{ steps.gitversion.outputs.NuGetVersion }}
+            /p:Version=${{ steps.gitversion.outputs.semVer }} \
+            /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -58,9 +58,9 @@ jobs:
           files: |
             ./artifacts/*.nupkg
             ./artifacts/*.snupkg
-          name: ${{ steps.gitversion.outputs.IsPreRelease == 'true' && 'Beta' || 'Release' }} ${{ steps.gitversion.outputs.SemVer }}
+          name: ${{ steps.gitversion.outputs.preReleaseTag != '' && 'Beta' || 'Release' }} ${{ steps.gitversion.outputs.semVer }}
           draft: false
-          prerelease: ${{ steps.gitversion.outputs.IsPreRelease == 'true' }}
+          prerelease: ${{ steps.gitversion.outputs.preReleaseTag != '' }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
