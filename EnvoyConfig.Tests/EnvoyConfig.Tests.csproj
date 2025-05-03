@@ -14,7 +14,9 @@
     <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-</PropertyGroup>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageLicenseFile>..\LICENSE</PackageLicenseFile>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
@@ -43,5 +45,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../EnvoyConfig/EnvoyConfig.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="" Visible="false" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 </Project>

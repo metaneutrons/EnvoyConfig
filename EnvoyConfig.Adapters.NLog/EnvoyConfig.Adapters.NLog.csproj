@@ -6,13 +6,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-</PropertyGroup>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageLicenseFile>..\LICENSE</PackageLicenseFile>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../EnvoyConfig/EnvoyConfig.csproj" />
     <PackageReference Include="NLog" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="" Visible="false" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 </Project>
