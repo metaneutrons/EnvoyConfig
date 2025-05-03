@@ -13,7 +13,6 @@
     <Company>metaneutrons</Company>
     <Copyright>GPL-3.0-or-later</Copyright>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <PackageLicenseFile>../LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 </PropertyGroup>
   <ItemGroup>
