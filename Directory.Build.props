@@ -1,39 +1,37 @@
 <Project>
   <PropertyGroup>
-    <StartupProject>EnvoyConfig.Sample</StartupProject>
-    <Authors>Fabian Schmieder</Authors>
-    <Company>metaneutrons</Company>
-    <DotenvNetVersion>3.1.0</DotenvNetVersion>
-    <SpectreConsoleVersion>0.44.0</SpectreConsoleVersion>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <Nullable>enable</Nullable>
+    <GitVersion_Enabled>true</GitVersion_Enabled>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateGitVersionInformationFile>true</GenerateGitVersionInformationFile>
+    <GenerateGitVersionAssemblyInfoFile>true</GenerateGitVersionAssemblyInfoFile>
+    <TargetFramework>net8.0</TargetFramework>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Suppress StyleCop warnings -->
+    <NoWarn>$(NoWarn);SA0001</NoWarn>
     <NoWarn>$(NoWarn);NU1604</NoWarn>
+    <!-- Warnins as errors -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>
+    <!-- Enable .NET analyzers -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <!-- Project to run -->
+    <StartupProject>EnvoyConfig.Sample</StartupProject>
   </PropertyGroup>
 
   <PropertyGroup>
-
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <Copyright>Copyright $([System.DateTime]::Now.Year) Fabian Schmieder</Copyright>
+    <!-- Package metadata for NuGet -->
+    <Authors>Fabian Schmieder</Authors>
+    <Company>metaneutrons</Company>
+    <Copyright>Copyright © $([System.DateTime]::Now.Year) Fabian Schmieder</Copyright>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <NeutralLanguage>en</NeutralLanguage>
-    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/metaneutrons/EnvoyConfig</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://metaneutrons.github.io/EnvoyConfig/</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/metaneutrons/EnvoyConfig/releases</PackageReleaseNotes>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Using Include="System" />
-    <Using Include="System.Collections.Generic" />
-    <Using Include="System.Linq" />
-    <Using Include="System.Threading.Tasks" />
-  </ItemGroup>
-
-  <ItemGroup>
-
-  </ItemGroup>
 </Project>
