@@ -21,7 +21,7 @@
       ],
       "command": "docfx build docfx.json",
       "problemMatcher": []
-    }
+    },
     {
       "label": "build-with-gitversion",
       "type": "shell",

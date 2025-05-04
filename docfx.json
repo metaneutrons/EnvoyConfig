@@ -55,7 +55,7 @@
     "postProcessors": ["ExtractSearchIndex"],
     "globalMetadata": {
       "_appTitle": "EnvoyConfig",
-      "_appName": "Documentation",
+      "_appName": "EnvoyConfig Documentation",
       "_appFaviconPath": "assets/favicon.svg",
       "_appLogoPath": "assets/logo.svg",
       "_appFooter": "<strong>DocFX + Singulink = ♥</strong>",
