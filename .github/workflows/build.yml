@@ -70,9 +70,12 @@ jobs:
 
       - name: Pack NuGet package
         run: |
-          dotnet pack --configuration Release --no-build -o ./artifacts \
-            /p:Version=${{ steps.gitversion.outputs.semVer }} \
-            /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }}
+          echo "Packing each project with version ${{ steps.gitversion.outputs.nuGetVersion }}"
+          for proj in $(find . -maxdepth 2 -name '*.csproj'); do
+            dotnet pack "$proj" --configuration Release --no-build \
+              -o ./artifacts \
+              /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }}
+          done
 
       - name: Upload NuGet Package
         uses: actions/upload-artifact@v4
