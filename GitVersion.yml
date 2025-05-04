@@ -1,24 +1,21 @@
-mode: ContinuousDeployment  # Good for automatic versioning on each commit
-
+mode: ContinuousDeployment
 assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatch
 assembly-informational-format: '{InformationalVersion}'
-
-tag-prefix: '[vV]'  # Tags like v1.0.0 will be recognized
+tag-prefix: '[vV]'
 
 branches:
   main:
     regex: ^main$
+    label: ''
     increment: Patch
     is-release-branch: true
-    label: ''  # No prerelease label on main → e.g., 1.2.3
 
   develop:
     regex: ^develop$
+    label: beta
     increment: Minor
     is-release-branch: false
-    label: alpha  # This enables prerelease versions like 0.2.0-alpha.5
-    track-merge-target: false
 
 ignore:
   sha: []

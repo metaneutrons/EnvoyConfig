@@ -1,0 +1,145 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (leave empty to auto-bump via GitVersion)"
+        required: false
+  push:
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0.0, v20.15.10
+
+permissions:
+  contents: write # Needed for creating GitHub releases
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for GitVersion
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.10.2
+        with:
+          versionSpec: "6.x"
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.10.2
+        with:
+          useConfigFile: true
+          updateAssemblyInfo: true
+
+      - name: Validate manual tag and compare with GitVersion
+        id: validate_tag
+        if: github.event.inputs.tag != ''
+        run: |
+          MANUAL_TAG="${{ github.event.inputs.tag }}"
+          GITVERSION_TAG="v${{ steps.gitversion.outputs.semVer }}"
+
+          # Semver validation
+          SEMVER_REGEX="^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$"
+          if ! [[ $MANUAL_TAG =~ $SEMVER_REGEX ]]; then
+            echo "Error: manual tag '$MANUAL_TAG' doesn't comply with SemVer standard"
+            exit 1
+          fi
+
+          # remove leading 'v' for comparison
+          CLEAN_MANUAL_TAG=${MANUAL_TAG#v}
+          CLEAN_GITVERSION_TAG=${GITVERSION_TAG#v}
+
+          # Split versions into components for comparison
+          IFS='.' read -ra MANUAL_PARTS <<< "${CLEAN_MANUAL_TAG%-*}"
+          IFS='.' read -ra GITVERSION_PARTS <<< "${CLEAN_GITVERSION_TAG%-*}"
+
+          # Compare major.minor.patch versions
+          for i in {0..2}; do
+            if [[ ${MANUAL_PARTS[$i]} -lt ${GITVERSION_PARTS[$i]} ]]; then
+              echo "Error: manual tag '$MANUAL_TAG' is lower as GitVersion-tag '$GITVERSION_TAG'"
+              exit 1
+            elif [[ ${MANUAL_PARTS[$i]} -gt ${GITVERSION_PARTS[$i]} ]]; then
+              # Manual tag is higher, which is valid
+              break
+            fi
+          done
+
+          # Check for prerelease comparison if major.minor.patch are equal
+          if [[ "${MANUAL_PARTS[0]}" == "${GITVERSION_PARTS[0]}" && "${MANUAL_PARTS[1]}" == "${GITVERSION_PARTS[1]}" && "${MANUAL_PARTS[2]}" == "${GITVERSION_PARTS[2]}" ]]; then
+            # If GitVersion has no prerelease but manual has, manual is lower (invalid)
+            if [[ "$CLEAN_GITVERSION_TAG" != *"-"* && "$CLEAN_MANUAL_TAG" == *"-"* ]]; then
+              echo "Error: Manual Tag '$MANUAL_TAG' (Prerelease) is lower as GitVersion-tag '$GITVERSION_TAG' (Release)"
+              exit 1
+            fi
+          fi
+
+          echo "Manual tag '$MANUAL_TAG' valid and not lower as GitVersion-tag '$GITVERSION_TAG'"
+        shell: bash
+
+      - name: Determine tag
+        id: determine_tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push tag to repo
+        run: |
+          TAG=${{ steps.determine_tag.outputs.tag }}
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+        shell: bash
+
+      - name: Re-determine version with new tag
+        id: gitversion_after_tag
+        uses: gittools/actions/gitversion/execute@v0.10.2
+        with:
+          useConfigFile: true
+          updateAssemblyInfo: true
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Release
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Pack NuGet package
+        run: dotnet pack --configuration Release --no-build -o ./artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.determine_tag.outputs.tag }}
+          files: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg
+          name: ${{ contains(steps.determine_tag.outputs.tag, '-') && 'Pre-Release' || 'Release' }} ${{ steps.determine_tag.outputs.tag }}
+          draft: false
+          prerelease: ${{ contains(steps.determine_tag.outputs.tag, '-') }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload NuGet Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg

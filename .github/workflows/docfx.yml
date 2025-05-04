@@ -1,6 +1,7 @@
-name: Documentation CI/CD
+name: Documentation
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main

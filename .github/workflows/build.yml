@@ -10,14 +10,14 @@ permissions:
 on:
   workflow_dispatch:
   push:
-    branches: [main, develop]
+    branches: [develop]
     paths-ignore:
       - ".gitignore"
       - ".github/**"
       - "**/*.md"
       - "docs/**"
   pull_request:
-    branches: [main, develop]
+    branches: [develop]
     paths-ignore:
       - ".gitignore"
       - ".github/**"
@@ -57,13 +57,12 @@ jobs:
           echo "SemVer: ${{ steps.gitversion.outputs.semVer }}"
           echo "NuGetVersion: ${{ steps.gitversion.outputs.nuGetVersion }}"
           echo "FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
-          echo "Updated project files with version info"
 
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Run tests
-        run: dotnet test EnvoyConfig.Tests/EnvoyConfig.Tests.csproj --verbosity normal
+        run: dotnet test --verbosity normal
 
       - name: Build
         run: dotnet build --configuration Release --no-restore /p:TreatWarningsAsErrors=true
