@@ -40,10 +40,10 @@ dotnet add package EnvoyConfig.Adapters.Microsoft  # For Microsoft.Extensions.Lo
 
 ```csharp
 public class MyConfig {
-    [Env(Key = "MYAPP_PORT", Default = "8080")]
+    [Env(Key = "PORT", Default = "8080")]  // for env var MYAPP_PORT
     public int Port { get; set; }
 
-    [Env(Key = "MYAPP_FEATURES", IsList = true)]
+    [Env(Key = "FEATURES", IsList = true)] // for env var MYAPP_FEATURES
     public List<string> Features { get; set; } = new();
 }
 
