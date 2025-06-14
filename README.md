@@ -60,19 +60,82 @@ var config = EnvConfig.Load<MyConfig>();
   - `[Env(ListPrefix = "ITEM_")]` (numbered list: ITEM_1, ITEM_2, ...)
   - `[Env(MapPrefix = "MAP_")]` (dictionary: MAP_key1=val1, MAP_key2=val2)
   - `[Env(NestedPrefix = "DB_")]` (nested object)
-- **Supported Types:** string, int, bool, double, enums, nullable types, List<T>, T[], Dictionary<TKey,TValue>
+- **Supported Types:** Primitives (string, int, bool, double, etc.), `DateTime`, `TimeSpan`, `Guid`, enums, nullable types, List<T>, T[], Dictionary<TKey,TValue>. Custom types can be supported via `ITypeConverter`.
 - **Logging:** Pass a custom logger (`IEnvLogSink`) or use an adapter for your framework.
+- **Custom Type Converters:** Implement `ITypeConverter` and register with `TypeConverterRegistry.RegisterConverter()` to handle custom string-to-type conversions.
+- **Error Handling:** Configure `EnvConfig.ThrowOnConversionError` (default `false`) to control behavior when type conversion fails. If `true`, exceptions are thrown; otherwise, errors are logged and default values are used.
 
 ## 📚 Documentation
 
 See here for [Documentation](https://metaneutrons.github.io/EnvoyConfig).
 
+## 🔧 Advanced Usage & Features (Continued)
+
+### Custom Type Converters
+
+EnvoyConfig allows you to define and register custom converters for types that are not natively supported or when you need specific parsing logic.
+
+1.  **Implement `ITypeConverter`:**
+    Create a class that implements the `EnvoyConfig.Conversion.ITypeConverter` interface. The core method is `object? Convert(string? value, Type targetType, IEnvLogSink? logger)`.
+
+    ```csharp
+    // Example: A simple Point class and its converter
+    public class Point { public int X { get; set; } public int Y { get; set; } }
+
+    public class PointConverter : ITypeConverter
+    {
+        public object? Convert(string? value, Type targetType, IEnvLogSink? logger)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            var parts = value.Split(',');
+            if (parts.Length == 2 && int.TryParse(parts[0], out int x) && int.TryParse(parts[1], out int y))
+            {
+                return new Point { X = x, Y = y };
+            }
+            logger?.Log(EnvLogLevel.Error, $"Cannot convert '{value}' to Point.");
+            return null;
+        }
+    }
+    ```
+
+2.  **Register the Converter:**
+    Before loading your configuration, register an instance of your converter:
+
+    ```csharp
+    using EnvoyConfig.Conversion;
+    // ...
+    TypeConverterRegistry.RegisterConverter(typeof(Point), new PointConverter());
+    // ...
+    // var config = EnvConfig.Load<YourConfigWithAPointProperty>();
+    ```
+
+### Error Handling
+
+Control how EnvoyConfig behaves when a type conversion from a string environment variable to a target property type fails:
+
+*   **`EnvConfig.ThrowOnConversionError` (static property):**
+    *   `false` (Default): If a conversion fails (e.g., "abc" cannot be parsed as an `int`), EnvoyConfig logs an error (if a logger is provided) and the property is set to its default C# value (e.g., `0` for `int`, `null` for reference types).
+    *   `true`: If a conversion fails, EnvoyConfig will throw an `InvalidOperationException` detailing the conversion issue. This allows for immediate and strict error handling.
+
+    ```csharp
+    // Example:
+    EnvConfig.ThrowOnConversionError = true; // Optional: for stricter error handling
+    try
+    {
+        // var config = EnvConfig.Load<MyConfig>();
+    }
+    catch (InvalidOperationException ex)
+    {
+        // Handle conversion errors
+    }
+    ```
+
 ## 🛠️ Troubleshooting / FAQ
 
-- Type conversion errors: check env var values and types
-- Missing env vars: use `Default` or handle nulls
-- Prefix confusion: ensure GlobalPrefix and attribute keys are set as intended
-- Logging: implement or use provided adapters for structured logs
+- **Type conversion errors:** Check environment variable values and target property types. If `EnvConfig.ThrowOnConversionError` is `false` (default), check logs for details and verify if the property has its default C# value. If `true`, an exception will be thrown.
+- **Missing env vars:** Use `Default` attribute property or handle `null`/default values in your application logic.
+- **Prefix confusion:** Ensure `GlobalPrefix` and attribute keys/prefixes are set as intended.
+- **Logging:** Implement `IEnvLogSink` or use provided adapters for structured logs, especially to diagnose conversion issues when `ThrowOnConversionError` is `false`.
 
 ## 🤝 Contributing
 

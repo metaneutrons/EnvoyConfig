@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using EnvoyConfig.Attributes;
+using EnvoyConfig.Conversion; // Added for ITypeConverter and TypeConverterRegistry
 using EnvoyConfig.Logging;
 
 namespace EnvoyConfig.Internal;
@@ -50,90 +51,39 @@ public static class ReflectionHelper
             try
             {
                 object? value = null;
-                var prefix = globalPrefix ?? string.Empty;
+                var currentPrefix = globalPrefix ?? string.Empty;
+
                 // List (comma-separated)
                 if (attr.IsList && !string.IsNullOrEmpty(attr.Key))
                 {
-                    var envKey = prefix + attr.Key;
-                    var str = Environment.GetEnvironmentVariable(envKey);
-                    if (string.IsNullOrEmpty(str) && attr.Default != null)
-                    {
-                        // Support non-string Default values
-                        str = attr.Default is string s ? s : attr.Default.ToString();
-                        if (variables != null && str != null)
-                        {
-                            foreach (var kv in variables)
-                            {
-                                str = str.Replace($"{{{kv.Key}}}", kv.Value);
-                            }
-                        }
-                    }
-                    value = ParseList(str, prop.PropertyType, attr.ListSeparator, logger, envKey);
+                    value = HandleCommaSeparatedListProperty(prop, attr, logger, currentPrefix, variables);
                 }
-                // Direct Key
+                // Direct Key (ensure this is not a list, as IsList is handled above)
                 else if (!string.IsNullOrEmpty(attr.Key))
                 {
-                    var envKey = prefix + attr.Key;
-                    var str = Environment.GetEnvironmentVariable(envKey);
-                    if ((str == null || str == "") && attr.Default != null)
-                    {
-                        // If Default is string, use as-is; else, use ToString() for conversion
-                        var defaultObj = attr.Default;
-                        if (defaultObj is string s)
-                        {
-                            str = s;
-                            if (variables != null && str != null)
-                            {
-                                foreach (var kv in variables)
-                                {
-                                    str = str.Replace($"{{{kv.Key}}}", kv.Value);
-                                }
-                            }
-                            value = ConvertToType(str, prop.PropertyType, logger, envKey);
-                        }
-                        else
-                        {
-                            // If already the correct type, assign directly
-                            if (defaultObj != null && prop.PropertyType.IsInstanceOfType(defaultObj))
-                            {
-                                value = defaultObj;
-                            }
-                            else
-                            {
-                                value = ConvertToType(defaultObj?.ToString(), prop.PropertyType, logger, envKey);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        value = ConvertToType(str, prop.PropertyType, logger, envKey);
-                    }
+                    value = HandleDirectKeyProperty(prop, attr, logger, currentPrefix, variables);
                 }
                 // Numbered List
                 else if (!string.IsNullOrEmpty(attr.ListPrefix))
                 {
-                    value = ParseNumberedList(prefix + attr.ListPrefix, prop.PropertyType, logger);
+                    value = HandleNumberedListProperty(prop, attr, logger, currentPrefix);
                 }
                 // Dictionary/Map
                 else if (!string.IsNullOrEmpty(attr.MapPrefix))
                 {
-                    value = ParseMap(prefix + attr.MapPrefix, prop.PropertyType, logger, attr.MapKeyCasing);
+                    value = HandleMapProperty(prop, attr, logger, currentPrefix);
                 }
                 // Nested object with prefix
                 else if (!string.IsNullOrEmpty(attr.NestedPrefix))
                 {
-                    var nestedType = prop.PropertyType;
-                    var nestedInstance = typeof(ReflectionHelper)
-                        .GetMethod(nameof(PopulateInstance), BindingFlags.Public | BindingFlags.Static)!
-                        .MakeGenericMethod(nestedType)
-                        .Invoke(null, [logger, prefix + attr.NestedPrefix, null]);
-                    value = nestedInstance;
+                    value = HandleNestedObjectProperty(prop, attr, logger, currentPrefix);
                 }
                 // List of nested objects (NestedListPrefix/NestedListSuffix)
                 else if (!string.IsNullOrEmpty(attr.NestedListPrefix) && !string.IsNullOrEmpty(attr.NestedListSuffix))
                 {
-                    value = ParseNestedList(prefix, attr, prop.PropertyType, logger);
+                    value = HandleNestedListProperty(prop, attr, logger, currentPrefix);
                 }
+
                 if (value != null)
                 {
                     prop.SetValue(instance, value);
@@ -151,6 +101,15 @@ public static class ReflectionHelper
     {
         try
         {
+            // Check for custom converter first
+            if (TypeConverterRegistry.TryGetConverter(type, out var customConverter) && customConverter != null)
+            {
+                // Note: The current ITypeConverter interface doesn't take envKey.
+                // If specific error reporting with envKey is needed for custom converters,
+                // the interface might need to be adjusted, or converters would need to handle logging internally.
+                return customConverter.Convert(str, type, logger);
+            }
+
             if (type == typeof(string))
             {
                 return str;
@@ -165,7 +124,12 @@ public static class ReflectionHelper
 
                 if (!int.TryParse(str, out var i))
                 {
-                    logger?.Log(EnvLogLevel.Error, $"Failed to convert '{envKey}' value '{str}' to int");
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to int";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
                     return 0;
                 }
                 return i;
@@ -180,7 +144,12 @@ public static class ReflectionHelper
 
                 if (!bool.TryParse(str, out var b))
                 {
-                    logger?.Log(EnvLogLevel.Error, $"Failed to convert '{envKey}' value '{str}' to bool");
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to bool";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
                     return false;
                 }
                 return b;
@@ -193,7 +162,17 @@ public static class ReflectionHelper
                     return 0.0;
                 }
 
-                return double.TryParse(str, out var d) ? d : 0.0;
+                if (!double.TryParse(str, out var d))
+                {
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to double";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                    return 0.0;
+                }
+                return d;
             }
 
             if (type == typeof(float))
@@ -203,7 +182,17 @@ public static class ReflectionHelper
                     return 0f;
                 }
 
-                return float.TryParse(str, out var f) ? f : 0f;
+                if (!float.TryParse(str, out var f))
+                {
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to float";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                    return 0f;
+                }
+                return f;
             }
 
             if (type == typeof(long))
@@ -213,12 +202,92 @@ public static class ReflectionHelper
                     return 0L;
                 }
 
-                return long.TryParse(str, out var l) ? l : 0L;
+                if (!long.TryParse(str, out var l))
+                {
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to long";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                    return 0L;
+                }
+                return l;
+            }
+
+            if (type == typeof(DateTime))
+            {
+                if (string.IsNullOrEmpty(str))
+                {
+                    return default(DateTime);
+                }
+
+                if (!DateTime.TryParse(str, out var dt))
+                {
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to DateTime";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                    return default(DateTime);
+                }
+                return dt;
+            }
+
+            if (type == typeof(TimeSpan))
+            {
+                if (string.IsNullOrEmpty(str))
+                {
+                    return default(TimeSpan);
+                }
+
+                if (!TimeSpan.TryParse(str, out var ts))
+                {
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to TimeSpan";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                    return default(TimeSpan);
+                }
+                return ts;
+            }
+
+            if (type == typeof(Guid))
+            {
+                if (string.IsNullOrEmpty(str))
+                {
+                    return default(Guid);
+                }
+
+                if (!Guid.TryParse(str, out var guid))
+                {
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to Guid";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                    return default(Guid);
+                }
+                return guid;
             }
 
             if (type.IsEnum && !string.IsNullOrEmpty(str))
             {
-                return Enum.TryParse(type, str, true, out var e) ? e : Activator.CreateInstance(type);
+                if (!Enum.TryParse(type, str, true, out var e))
+                {
+                    var errorMsg = $"Failed to convert '{envKey}' value '{str}' to enum type {type.Name}";
+                    logger?.Log(EnvLogLevel.Error, errorMsg);
+                    if (EnvConfig.ThrowOnConversionError)
+                    {
+                        throw new InvalidOperationException(errorMsg);
+                    }
+                    return Activator.CreateInstance(type);
+                }
+                return e;
             }
 
             if (Nullable.GetUnderlyingType(type) != null)
@@ -234,12 +303,104 @@ public static class ReflectionHelper
         }
         catch (Exception ex)
         {
-            logger?.Log(EnvLogLevel.Error, $"Failed to convert '{envKey}' value '{str}' to {type.Name}: {ex.Message}");
+            var errorMsg = $"Failed to convert '{envKey}' value '{str}' to {type.Name}: {ex.Message}";
+            logger?.Log(EnvLogLevel.Error, errorMsg);
+            if (EnvConfig.ThrowOnConversionError && !(ex is InvalidOperationException)) // Avoid re-wrapping if already our exception
+            {
+                throw new InvalidOperationException(errorMsg, ex);
+            }
         }
+        // If ThrowOnConversionError is true, we should have already thrown.
+        // If false, or if it's a non-conversion related exception that was caught by the generic catch,
+        // return default value.
         return type.IsValueType ? Activator.CreateInstance(type) : null;
     }
 
-    private static object? ParseList(string? str, Type type, char sep, IEnvLogSink? logger, string envKey)
+    private static object? HandleDirectKeyProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix, Dictionary<string, string>? variables)
+    {
+        var envKey = globalPrefix + attr.Key;
+        var str = Environment.GetEnvironmentVariable(envKey);
+
+        if ((str == null || str == "") && attr.Default != null)
+        {
+            var defaultObj = attr.Default;
+            if (defaultObj is string s)
+            {
+                str = s;
+                if (variables != null && str != null)
+                {
+                    foreach (var kv in variables)
+                    {
+                        str = str.Replace($"{{{kv.Key}}}", kv.Value);
+                    }
+                }
+                return ConvertToType(str, prop.PropertyType, logger, envKey);
+            }
+            else
+            {
+                if (defaultObj != null && prop.PropertyType.IsInstanceOfType(defaultObj))
+                {
+                    return defaultObj;
+                }
+                else
+                {
+                    return ConvertToType(defaultObj?.ToString(), prop.PropertyType, logger, envKey);
+                }
+            }
+        }
+        else
+        {
+            return ConvertToType(str, prop.PropertyType, logger, envKey);
+        }
+    }
+
+    private static object? HandleCommaSeparatedListProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix, Dictionary<string, string>? variables)
+    {
+        var envKey = globalPrefix + attr.Key;
+        var str = Environment.GetEnvironmentVariable(envKey);
+
+        if (string.IsNullOrEmpty(str) && attr.Default != null)
+        {
+            str = attr.Default is string s ? s : attr.Default.ToString();
+            if (variables != null && str != null)
+            {
+                foreach (var kv in variables)
+                {
+                    str = str.Replace($"{{{kv.Key}}}", kv.Value);
+                }
+            }
+        }
+        return ParseList(str, prop.PropertyType, attr.ListSeparator, logger, envKey);
+    }
+
+    private static object? HandleNumberedListProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix)
+    {
+        return ParseNumberedList(globalPrefix + attr.ListPrefix, prop.PropertyType, logger);
+    }
+
+    private static object? HandleMapProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix)
+    {
+        return ParseMap(globalPrefix + attr.MapPrefix, prop.PropertyType, logger, attr.MapKeyCasing);
+    }
+
+    private static object? HandleNestedObjectProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix)
+    {
+        var nestedType = prop.PropertyType;
+        return typeof(ReflectionHelper)
+            .GetMethod(nameof(PopulateInstance), BindingFlags.Public | BindingFlags.Static)!
+            .MakeGenericMethod(nestedType)
+            .Invoke(null, new object?[] { logger, globalPrefix + attr.NestedPrefix, null });
+    }
+
+    private static object? HandleNestedListProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix)
+    {
+        return ParseNestedList(globalPrefix, attr, prop.PropertyType, logger);
+    }
+
+    // Original parsing methods (ParseList, ParseNumberedList, ParseMap, ParseNestedList) remain unchanged below this line
+    // but are now called by the new Handle* methods.
+
+    internal static object? ParseList(string? str, Type type, char sep, IEnvLogSink? logger, string envKey) // Made internal for potential testing, was private
     {
         if (string.IsNullOrEmpty(str))
         {
@@ -284,7 +445,7 @@ public static class ReflectionHelper
         return list;
     }
 
-    private static object? ParseNumberedList(string prefix, Type type, IEnvLogSink? logger)
+    internal static object? ParseNumberedList(string prefix, Type type, IEnvLogSink? logger) // Made internal for potential testing, was private
     {
         var elemType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments.FirstOrDefault();
         if (elemType == null)
@@ -324,7 +485,7 @@ public static class ReflectionHelper
         return list;
     }
 
-    private static object? ParseMap(
+    internal static object? ParseMap( // Made internal for potential testing, was private
         string prefix,
         Type type,
         IEnvLogSink? logger,
@@ -373,7 +534,7 @@ public static class ReflectionHelper
     }
 
     // Helper for parsing a list of nested objects from env vars with numbered prefixes
-    private static object? ParseNestedList(string globalPrefix, EnvAttribute attr, Type listType, IEnvLogSink? logger)
+    internal static object? ParseNestedList(string globalPrefix, EnvAttribute attr, Type listType, IEnvLogSink? logger) // Made internal for potential testing, was private
     {
         // Only works for List<T>
         if (!listType.IsGenericType || listType.GetGenericTypeDefinition() != typeof(List<>))

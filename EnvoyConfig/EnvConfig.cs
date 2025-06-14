@@ -15,6 +15,12 @@ public static class EnvConfig
     public static string GlobalPrefix { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets a value indicating whether to throw an exception when a type conversion error occurs.
+    /// Defaults to <c>false</c>, meaning errors are logged and default values are used.
+    /// </summary>
+    public static bool ThrowOnConversionError { get; set; } = false;
+
+    /// <summary>
     /// Loads configuration data from environment variables (and optionally a .env file specified by UseDotEnv)
     /// into a new instance of the specified configuration class <typeparamref name="T"/>.
     /// </summary>
