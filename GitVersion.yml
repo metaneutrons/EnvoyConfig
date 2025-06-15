@@ -17,5 +17,11 @@ branches:
     increment: Minor
     is-release-branch: false
 
+feature:
+  regex: ^feature/.*
+  label: alpha
+  increment: Patch
+  is-release-branch: false
+
 ignore:
   sha: []
