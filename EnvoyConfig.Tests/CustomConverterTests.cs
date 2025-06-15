@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using EnvoyConfig.Attributes;
 using EnvoyConfig.Conversion;
 using EnvoyConfig.Logging;
@@ -16,9 +17,17 @@ namespace EnvoyConfig.Tests
 
         // Default constructor for Activator.CreateInstance in ReflectionHelper if no valid env var is found
         // and no custom converter is registered, or if the custom converter returns null.
-        public CustomPoint() { X = 0; Y = 0; }
+        public CustomPoint()
+        {
+            X = 0;
+            Y = 0;
+        }
 
-        public CustomPoint(int x, int y) { X = x; Y = y; }
+        public CustomPoint(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
 
         public override bool Equals(object? obj)
         {
@@ -45,31 +54,45 @@ namespace EnvoyConfig.Tests
             if (targetType != typeof(CustomPoint))
             {
                 // This check is good practice, though ReflectionHelper currently calls the converter only if the type matches.
-                logger?.Log(EnvLogLevel.Error, $"CustomPointConverter: This converter only supports CustomPoint, not {targetType.Name}.");
+                logger?.Log(
+                    EnvLogLevel.Error,
+                    $"CustomPointConverter: This converter only supports CustomPoint, not {targetType.Name}."
+                );
                 return null;
             }
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                logger?.Log(EnvLogLevel.Warning, $"CustomPointConverter: Input string for CustomPoint is null or whitespace. Returning null.");
+                logger?.Log(
+                    EnvLogLevel.Warning,
+                    $"CustomPointConverter: Input string for CustomPoint is null or whitespace. Returning null."
+                );
                 return null;
             }
 
             var parts = value.Split(',');
             if (parts.Length != 2)
             {
-                logger?.Log(EnvLogLevel.Error, $"CustomPointConverter: Invalid input string format for CustomPoint. Expected 'X,Y', got '{value}'. Returning null.");
+                logger?.Log(
+                    EnvLogLevel.Error,
+                    $"CustomPointConverter: Invalid input string format for CustomPoint. Expected 'X,Y', got '{value}'. Returning null."
+                );
                 return null;
             }
 
-            if (int.TryParse(parts[0].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out int x) &&
-                int.TryParse(parts[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out int y))
+            if (
+                int.TryParse(parts[0].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out int x)
+                && int.TryParse(parts[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out int y)
+            )
             {
                 return new CustomPoint(x, y);
             }
             else
             {
-                logger?.Log(EnvLogLevel.Error, $"CustomPointConverter: Failed to parse X or Y integer values from '{value}' for CustomPoint. Returning null.");
+                logger?.Log(
+                    EnvLogLevel.Error,
+                    $"CustomPointConverter: Failed to parse X or Y integer values from '{value}' for CustomPoint. Returning null."
+                );
                 return null;
             }
         }
@@ -87,7 +110,6 @@ namespace EnvoyConfig.Tests
     {
         public object? Convert(string? value, Type targetType, IEnvLogSink? logger) => null;
     }
-
 
     // 4. Test Class
     public class CustomConverterFeatureTests : IDisposable
@@ -136,7 +158,12 @@ namespace EnvoyConfig.Tests
 
             // Assert
             Assert.Null(config.MyCustomPoint); // Converter returns null on error
-            Assert.Contains(_testLogger.Messages, msg => msg.Level == EnvLogLevel.Error && msg.Message.StartsWith("CustomPointConverter: Invalid input string format"));
+            Assert.Contains(
+                _testLogger.Messages,
+                msg =>
+                    msg.Level == EnvLogLevel.Error
+                    && msg.Message.StartsWith("CustomPointConverter: Invalid input string format")
+            );
         }
 
         [Fact]
@@ -151,7 +178,12 @@ namespace EnvoyConfig.Tests
 
             // Assert
             Assert.Null(config.MyCustomPoint); // Converter returns null on error
-            Assert.Contains(_testLogger.Messages, msg => msg.Level == EnvLogLevel.Error && msg.Message.StartsWith("CustomPointConverter: Failed to parse X or Y integer values"));
+            Assert.Contains(
+                _testLogger.Messages,
+                msg =>
+                    msg.Level == EnvLogLevel.Error
+                    && msg.Message.StartsWith("CustomPointConverter: Failed to parse X or Y integer values")
+            );
         }
 
         [Fact]
@@ -166,7 +198,14 @@ namespace EnvoyConfig.Tests
 
             // Assert
             Assert.Null(config.MyCustomPoint); // Converter returns null for empty/whitespace
-            Assert.Contains(_testLogger.Messages, msg => msg.Level == EnvLogLevel.Warning && msg.Message.StartsWith("CustomPointConverter: Input string for CustomPoint is null or whitespace"));
+            Assert.Contains(
+                _testLogger.Messages,
+                msg =>
+                    msg.Level == EnvLogLevel.Warning
+                    && msg.Message.StartsWith(
+                        "CustomPointConverter: Input string for CustomPoint is null or whitespace"
+                    )
+            );
         }
 
         [Fact]
@@ -199,9 +238,12 @@ namespace EnvoyConfig.Tests
         }
     }
 
-    // Minimal TestLogSink (already defined in EdgeCases.cs, but good for clarity if this file were standalone)
-    // If TestLogSink is defined in another file in the same test project, this might cause a duplicate type error.
-    // Assuming it's defined once per test project. For this exercise, keeping it here for completeness of the file content.
-    // To avoid issues, this would typically be in its own file or a shared test utilities file.
-    // public class TestLogSink : IEnvLogSink { ... } // See previous version for its definition
+    // TestLogSink implementation for testing purposes
+    public class TestLogSink : IEnvLogSink
+    {
+        public readonly List<(EnvLogLevel Level, string Message)> Entries = new();
+        public IEnumerable<(EnvLogLevel Level, string Message)> Messages => Entries;
+
+        public void Log(EnvLogLevel level, string message) => Entries.Add((level, message));
+    }
 }

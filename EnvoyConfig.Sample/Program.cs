@@ -1,16 +1,24 @@
+using System;
+using System.IO;
+using System.Linq;
 using dotenv.net;
+using EnvoyConfig;
+using EnvoyConfig.Conversion;
 using Spectre.Console;
 
 namespace EnvoyConfig.Sample;
 
-using System;
-using System.IO;
-using System.Linq;
-
+/// <summary>
+/// Main program for the SNAPDOG configuration demonstration.
+/// Shows how to register custom type converters and load nested configurations using the SampleConfig with SNAPDOG clients.
+/// </summary>
 internal class Program
 {
     private static void Main(string[] args)
     {
+        // Register the custom KnxAddress converter first
+        RegisterCustomConverters();
+
         // Resolve absolute path to sample.env
         var envPath = Path.Combine(AppContext.BaseDirectory, "sample.env");
         if (!File.Exists(envPath))
@@ -21,18 +29,36 @@ internal class Program
 
         // Load .env file
         DotEnv.Load(options: new DotEnvOptions(envFilePaths: [envPath], overwriteExistingVars: true));
+
         // Set global prefix
         EnvConfig.GlobalPrefix = "SNAPDOG_";
 
-        // Load config
+        // Load config using SampleConfig (which now includes SnapdogClients)
         var config = EnvConfig.Load<SampleConfig>(new SpectreConsoleLogSink());
 
-        AnsiConsole.Write(new Align(new FigletText("Snapdog Config").Color(Color.Green), HorizontalAlignment.Left));
+        DisplayHeader();
+        DisplayEnvironmentVariables();
+        DisplayConfiguration(config);
+        DisplayFooter();
+    }
 
+    private static void RegisterCustomConverters()
+    {
+        // Register the custom KnxAddress converter
+        TypeConverterRegistry.RegisterConverter(typeof(KnxAddress), new KnxAddressConverter());
+        TypeConverterRegistry.RegisterConverter(typeof(KnxAddress?), new KnxAddressConverter());
+    }
+
+    private static void DisplayHeader()
+    {
+        AnsiConsole.Write(new Align(new FigletText("Snapdog Config").Color(Color.Green), HorizontalAlignment.Left));
         AnsiConsole.MarkupLine($"[bold yellow]🐶 Welcome to the Snapdog Sample Application![/]");
         AnsiConsole.MarkupLine($"[bold blue]Loaded configuration from:[/] [white]sample.env[/]");
         AnsiConsole.WriteLine();
+    }
 
+    private static void DisplayEnvironmentVariables()
+    {
         AnsiConsole.Write(new Rule("[grey]--- ENVIRONMENT VARIABLES ---[/]").RuleStyle("grey"));
 
         // Print all SNAPDOG_ env vars
@@ -43,6 +69,7 @@ internal class Program
             .Select(e => ($"{e.Key}", e.Value?.ToString() ?? "<null>"))
             .OrderBy(t => t.Item1)
             .ToArray();
+
         if (snapdogVars.Length > 0)
         {
             var table = new Table().NoBorder();
@@ -59,12 +86,17 @@ internal class Program
         }
         AnsiConsole.Write(new Rule("[grey]--- END ENVIRONMENT VARIABLES ---[/]").RuleStyle("grey"));
         AnsiConsole.WriteLine();
+    }
 
+    private static void DisplayConfiguration(SampleConfig config)
+    {
+        // Display basic system configuration
         PrintSection(
             "System",
             "⚙️",
             [("Environment", typeof(string).Name, config.Env), ("Log Level", typeof(string).Name, config.LogLevel)]
         );
+
         PrintSection(
             "Telemetry",
             "📊",
@@ -74,6 +106,7 @@ internal class Program
                 ("Sampling Rate", typeof(int).Name, config.TelemetrySamplingRate.ToString()),
             ]
         );
+
         PrintSection(
             "Prometheus",
             "📈",
@@ -83,6 +116,7 @@ internal class Program
                 ("Port", typeof(int).Name, config.PrometheusPort.ToString()),
             ]
         );
+
         PrintSection(
             "Jaeger",
             "🕵️",
@@ -93,6 +127,7 @@ internal class Program
                 ("Agent Port", typeof(int).Name, config.JaegerAgentPort.ToString()),
             ]
         );
+
         PrintSection(
             "API Auth",
             "🔑",
@@ -101,6 +136,7 @@ internal class Program
                 ("API Keys", "string[]", string.Join(", ", config.ApiKeys)),
             ]
         );
+
         PrintSection("Zones", "🗺️", [("Zones", "string[]", string.Join(", ", config.Zones))]);
 
         // Snapcast configuration as key-value map
@@ -141,6 +177,78 @@ internal class Program
             }
         }
 
+        // Display SNAPDOG clients configuration - NEW SECTION
+        DisplaySnapdogClients(config.SnapdogClients);
+    }
+
+    private static void DisplaySnapdogClients(System.Collections.Generic.List<ClientConfig> clients)
+    {
+        if (clients == null || clients.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[yellow]No SNAPDOG clients configured.[/]");
+            return;
+        }
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(new Rule($"[green]SNAPDOG Clients ({clients.Count} configured)[/]").RuleStyle("green"));
+        AnsiConsole.WriteLine();
+
+        for (int i = 0; i < clients.Count; i++)
+        {
+            var client = clients[i];
+
+            // Basic client info
+            PrintSection(
+                $"Client {i + 1}: {client.Name}",
+                "🎛️",
+                [
+                    ("Name", typeof(string).Name, client.Name),
+                    ("MAC Address", typeof(string).Name, client.Mac),
+                    ("MQTT Base Topic", typeof(string).Name, client.MqttBaseTopic),
+                    ("Default Zone", typeof(int).Name, client.DefaultZone.ToString()),
+                ]
+            );
+
+            // MQTT Topics
+            var mqttRows = new[]
+            {
+                ("Volume Set Topic", typeof(string).Name, client.Mqtt.VolumeSetTopic ?? "<null>"),
+                ("Mute Set Topic", typeof(string).Name, client.Mqtt.MuteSetTopic ?? "<null>"),
+                ("Latency Set Topic", typeof(string).Name, client.Mqtt.LatencySetTopic ?? "<null>"),
+                ("Zone Set Topic", typeof(string).Name, client.Mqtt.ZoneSetTopic ?? "<null>"),
+                ("Control Topic", typeof(string).Name, client.Mqtt.ControlTopic ?? "<null>"),
+                ("Connected Topic", typeof(string).Name, client.Mqtt.ConnectedTopic ?? "<null>"),
+                ("Volume Topic", typeof(string).Name, client.Mqtt.VolumeTopic ?? "<null>"),
+                ("Mute Topic", typeof(string).Name, client.Mqtt.MuteTopic ?? "<null>"),
+                ("Latency Topic", typeof(string).Name, client.Mqtt.LatencyTopic ?? "<null>"),
+                ("Zone Topic", typeof(string).Name, client.Mqtt.ZoneTopic ?? "<null>"),
+                ("State Topic", typeof(string).Name, client.Mqtt.StateTopic ?? "<null>"),
+            };
+            PrintSection($"MQTT Topics (Client {i + 1})", "📡", mqttRows);
+
+            // KNX Configuration
+            var knxRows = new[]
+            {
+                ("Enabled", typeof(bool).Name, client.Knx.Enabled.ToString()),
+                ("Volume", typeof(KnxAddress).Name, client.Knx.Volume?.ToString() ?? "<null>"),
+                ("Volume Status", typeof(KnxAddress).Name, client.Knx.VolumeStatus?.ToString() ?? "<null>"),
+                ("Volume Up", typeof(KnxAddress).Name, client.Knx.VolumeUp?.ToString() ?? "<null>"),
+                ("Volume Down", typeof(KnxAddress).Name, client.Knx.VolumeDown?.ToString() ?? "<null>"),
+                ("Mute", typeof(KnxAddress).Name, client.Knx.Mute?.ToString() ?? "<null>"),
+                ("Mute Status", typeof(KnxAddress).Name, client.Knx.MuteStatus?.ToString() ?? "<null>"),
+                ("Mute Toggle", typeof(KnxAddress).Name, client.Knx.MuteToggle?.ToString() ?? "<null>"),
+                ("Latency", typeof(KnxAddress).Name, client.Knx.Latency?.ToString() ?? "<null>"),
+                ("Latency Status", typeof(KnxAddress).Name, client.Knx.LatencyStatus?.ToString() ?? "<null>"),
+                ("Zone", typeof(KnxAddress).Name, client.Knx.Zone?.ToString() ?? "<null>"),
+                ("Zone Status", typeof(KnxAddress).Name, client.Knx.ZoneStatus?.ToString() ?? "<null>"),
+                ("Connected Status", typeof(KnxAddress).Name, client.Knx.ConnectedStatus?.ToString() ?? "<null>"),
+            };
+            PrintSection($"KNX Configuration (Client {i + 1})", "🏠", knxRows);
+        }
+    }
+
+    private static void DisplayFooter()
+    {
         AnsiConsole.Write(new Rule("[green]✔ Ready![/]").RuleStyle("green"));
         AnsiConsole.MarkupLine("[italic grey]Tip: Edit sample.env and rerun to see changes instantly![/]");
     }

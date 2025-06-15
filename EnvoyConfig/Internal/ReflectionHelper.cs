@@ -92,6 +92,12 @@ public static class ReflectionHelper
             catch (Exception ex)
             {
                 logger?.Log(EnvLogLevel.Error, $"Failed to load property '{prop.Name}': {ex.Message}");
+
+                // If ThrowOnConversionError is true and this is a conversion-related exception, re-throw it
+                if (EnvConfig.ThrowOnConversionError && ex is InvalidOperationException)
+                {
+                    throw;
+                }
             }
         }
         return instance;
@@ -305,9 +311,16 @@ public static class ReflectionHelper
         {
             var errorMsg = $"Failed to convert '{envKey}' value '{str}' to {type.Name}: {ex.Message}";
             logger?.Log(EnvLogLevel.Error, errorMsg);
-            if (EnvConfig.ThrowOnConversionError && !(ex is InvalidOperationException)) // Avoid re-wrapping if already our exception
+            if (EnvConfig.ThrowOnConversionError)
             {
-                throw new InvalidOperationException(errorMsg, ex);
+                if (ex is InvalidOperationException)
+                {
+                    throw; // Re-throw the original exception
+                }
+                else
+                {
+                    throw new InvalidOperationException(errorMsg, ex); // Wrap other exceptions
+                }
             }
         }
         // If ThrowOnConversionError is true, we should have already thrown.
@@ -316,7 +329,13 @@ public static class ReflectionHelper
         return type.IsValueType ? Activator.CreateInstance(type) : null;
     }
 
-    private static object? HandleDirectKeyProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix, Dictionary<string, string>? variables)
+    private static object? HandleDirectKeyProperty(
+        PropertyInfo prop,
+        EnvAttribute attr,
+        IEnvLogSink? logger,
+        string globalPrefix,
+        Dictionary<string, string>? variables
+    )
     {
         var envKey = globalPrefix + attr.Key;
         var str = Environment.GetEnvironmentVariable(envKey);
@@ -354,7 +373,13 @@ public static class ReflectionHelper
         }
     }
 
-    private static object? HandleCommaSeparatedListProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix, Dictionary<string, string>? variables)
+    private static object? HandleCommaSeparatedListProperty(
+        PropertyInfo prop,
+        EnvAttribute attr,
+        IEnvLogSink? logger,
+        string globalPrefix,
+        Dictionary<string, string>? variables
+    )
     {
         var envKey = globalPrefix + attr.Key;
         var str = Environment.GetEnvironmentVariable(envKey);
@@ -373,17 +398,32 @@ public static class ReflectionHelper
         return ParseList(str, prop.PropertyType, attr.ListSeparator, logger, envKey);
     }
 
-    private static object? HandleNumberedListProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix)
+    private static object? HandleNumberedListProperty(
+        PropertyInfo prop,
+        EnvAttribute attr,
+        IEnvLogSink? logger,
+        string globalPrefix
+    )
     {
         return ParseNumberedList(globalPrefix + attr.ListPrefix, prop.PropertyType, logger);
     }
 
-    private static object? HandleMapProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix)
+    private static object? HandleMapProperty(
+        PropertyInfo prop,
+        EnvAttribute attr,
+        IEnvLogSink? logger,
+        string globalPrefix
+    )
     {
         return ParseMap(globalPrefix + attr.MapPrefix, prop.PropertyType, logger, attr.MapKeyCasing);
     }
 
-    private static object? HandleNestedObjectProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix)
+    private static object? HandleNestedObjectProperty(
+        PropertyInfo prop,
+        EnvAttribute attr,
+        IEnvLogSink? logger,
+        string globalPrefix
+    )
     {
         var nestedType = prop.PropertyType;
         return typeof(ReflectionHelper)
@@ -392,7 +432,12 @@ public static class ReflectionHelper
             .Invoke(null, new object?[] { logger, globalPrefix + attr.NestedPrefix, null });
     }
 
-    private static object? HandleNestedListProperty(PropertyInfo prop, EnvAttribute attr, IEnvLogSink? logger, string globalPrefix)
+    private static object? HandleNestedListProperty(
+        PropertyInfo prop,
+        EnvAttribute attr,
+        IEnvLogSink? logger,
+        string globalPrefix
+    )
     {
         return ParseNestedList(globalPrefix, attr, prop.PropertyType, logger);
     }

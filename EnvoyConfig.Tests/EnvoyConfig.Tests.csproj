@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../EnvoyConfig/EnvoyConfig.csproj" />
+    <ProjectReference Include="../EnvoyConfig.Sample/EnvoyConfig.Sample.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="" Visible="false" />

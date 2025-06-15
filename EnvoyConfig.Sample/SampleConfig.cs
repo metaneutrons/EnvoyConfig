@@ -12,7 +12,7 @@ public class SampleConfig
     [Env(Key = "LOG_LEVEL", Default = "Information")]
     public string LogLevel { get; set; } = null!;
 
-    [Env(Key = "TELEMETRY_ENABLED", Default = "true")]
+    [Env(Key = "TELEMETRY_ENABLED", Default = true)]
     public bool TelemetryEnabled { get; set; }
 
     [Env(Key = "TELEMETRY_SERVICE_NAME", Default = "sample")]
@@ -27,10 +27,10 @@ public class SampleConfig
     [Env(Key = "PROMETHEUS_PATH", Default = "/metrics")]
     public string PrometheusPath { get; set; } = null!;
 
-    [Env(Key = "PROMETHEUS_PORT")]
+    [Env(Key = "PROMETHEUS_PORT", Default = 9090)]
     public int PrometheusPort { get; set; }
 
-    [Env(Key = "JAEGER_ENABLED")]
+    [Env(Key = "JAEGER_ENABLED", Default = true)]
     public bool JaegerEnabled { get; set; }
 
     [Env(Key = "JAEGER_ENDPOINT", Default = "http://jaeger:14268")]
@@ -58,4 +58,11 @@ public class SampleConfig
     // List of MQTT zone configs
     [Env(NestedListPrefix = "ZONE_", NestedListSuffix = "_MQTT_")]
     public List<SampleZoneMqttConfig> ZonesMqtt { get; set; } = [];
+
+    /// <summary>
+    /// List of SNAPDOG client configurations for multi-room audio system integration.
+    /// Each client represents an individual SNAPDOG device with its MQTT topics and KNX addresses.
+    /// </summary>
+    [Env(NestedListPrefix = "CLIENT_", NestedListSuffix = "_")]
+    public List<ClientConfig> SnapdogClients { get; set; } = [];
 }
