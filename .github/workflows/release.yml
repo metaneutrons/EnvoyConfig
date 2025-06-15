@@ -1,4 +1,4 @@
-name: Release
+name: (Pre)Release Workflow
 
 on:
   workflow_dispatch:
@@ -72,6 +72,7 @@ jobs:
           echo "  FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
           echo "  NuGetVersion: ${{ steps.gitversion.outputs.nuGetVersion }}"
           echo "  BranchName: ${{ steps.gitversion.outputs.branchName }}"
+          echo "  PreReleaseTag: '${{ steps.gitversion.outputs.preReleaseTag }}'"
           echo "  IsPreRelease: ${{ steps.gitversion.outputs.preReleaseTag != '' }}"
 
       - name: Validate manual tag and compare with GitVersion
@@ -122,13 +123,27 @@ jobs:
       - name: Determine tag
         id: determine_tag
         run: |
+          BRANCH="${{ github.event.inputs.branch || github.head_ref || github.ref_name }}"
+
           if [ -n "${{ github.event.inputs.tag }}" ]; then
-            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+            TAG="${{ github.event.inputs.tag }}"
+            echo "Using manual tag: $TAG"
           elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            TAG="${{ github.ref_name }}"
+            echo "Using existing git tag: $TAG"
           else
-            echo "tag=v${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_OUTPUT
+            # Use fullSemVer for non-main branches to include prerelease suffixes
+            if [[ "$BRANCH" == "main" ]]; then
+              TAG="v${{ steps.gitversion.outputs.semVer }}"
+              echo "Main branch - using SemVer: $TAG"
+            else
+              TAG="v${{ steps.gitversion.outputs.fullSemVer }}"
+              echo "Non-main branch - using FullSemVer: $TAG"
+            fi
           fi
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Final tag: $TAG"
 
       - name: Push tag to repo
         run: |
@@ -155,6 +170,23 @@ jobs:
       - name: Pack NuGet package
         run: dotnet pack --configuration Release --no-build -o ./artifacts
 
+      - name: Determine release type
+        id: release_type
+        run: |
+          TAG="${{ steps.determine_tag.outputs.tag }}"
+          BRANCH="${{ github.event.inputs.branch || github.head_ref || github.ref_name }}"
+
+          # Check if it's a prerelease based on tag content OR branch
+          if [[ "$TAG" == *"-"* ]] || [[ "$BRANCH" != "main" ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "release_name=Pre-Release" >> $GITHUB_OUTPUT
+            echo "🧪 Creating Pre-Release for branch: $BRANCH (tag: $TAG)"
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "release_name=Release" >> $GITHUB_OUTPUT
+            echo "📦 Creating stable Release for branch: $BRANCH (tag: $TAG)"
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -162,9 +194,9 @@ jobs:
           files: |
             ./artifacts/*.nupkg
             ./artifacts/*.snupkg
-          name: ${{ contains(steps.determine_tag.outputs.tag, '-') && 'Pre-Release' || 'Release' }} ${{ steps.determine_tag.outputs.tag }}
+          name: ${{ steps.release_type.outputs.release_name }} ${{ steps.determine_tag.outputs.tag }}
           draft: false
-          prerelease: ${{ contains(steps.determine_tag.outputs.tag, '-') }}
+          prerelease: ${{ steps.release_type.outputs.is_prerelease == 'true' }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
