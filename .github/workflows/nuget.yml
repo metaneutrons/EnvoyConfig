@@ -59,7 +59,7 @@ jobs:
       - name: Download release NuGet packages
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: release.yml
+          workflow: (Pre)Release
           workflow_conclusion: success
           name: nuget-package
           path: ./artifacts
@@ -120,7 +120,9 @@ jobs:
           SUCCESS_COUNT=0
           ERROR_COUNT=0
 
-          for pkg in ./artifacts/*.{nupkg,snupkg}; do
+          # Process .nupkg files
+          echo "🔍 Looking for .nupkg files..."
+          for pkg in ./artifacts/*.nupkg; do
             if [ -f "$pkg" ]; then
               PKG_NAME=$(basename "$pkg")
               echo "📤 Publishing $PKG_NAME..."
@@ -136,6 +138,29 @@ jobs:
               fi
             fi
           done
+
+          # Process .snupkg files (symbol packages) if they exist
+          echo "🔍 Looking for .snupkg files..."
+          if ls ./artifacts/*.snupkg 1> /dev/null 2>&1; then
+            for pkg in ./artifacts/*.snupkg; do
+              if [ -f "$pkg" ]; then
+                PKG_NAME=$(basename "$pkg")
+                echo "📤 Publishing symbol package $PKG_NAME..."
+
+                if dotnet nuget push "$pkg" --api-key "$NUGET_API_KEY" \
+                  --source "https://api.nuget.org/v3/index.json" \
+                  ${{ steps.release_info.outputs.nuget_flags }}; then
+                  echo "✅ Successfully published $PKG_NAME"
+                  SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+                else
+                  echo "❌ Failed to publish $PKG_NAME"
+                  ERROR_COUNT=$((ERROR_COUNT + 1))
+                fi
+              fi
+            done
+          else
+            echo "ℹ️ No .snupkg files found (symbol packages not generated)"
+          fi
 
           echo ""
           echo "📊 Publishing Summary:"
