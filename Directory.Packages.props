@@ -3,6 +3,7 @@
     <IncludePrerelease>true</IncludePrerelease>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="GitVersion.MsBuild" Version="6.0.5" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />

@@ -34,4 +34,8 @@
     <PackageProjectUrl>https://metaneutrons.github.io/EnvoyConfig/</PackageProjectUrl>
     <PackageReleaseNotes>https://github.com/metaneutrons/EnvoyConfig/releases</PackageReleaseNotes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitVersion.MsBuild" PrivateAssets="All" />
+  </ItemGroup>
 </Project>
