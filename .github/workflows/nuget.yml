@@ -7,21 +7,54 @@ on:
   workflow_dispatch:
     inputs:
       version_tag:
-        description: "Version tag to publish (e.g., v1.0.0)"
+        description: "Version tag to publish (e.g., v1.0.0 or v1.0.0-beta.1)"
         required: true
         type: string
+      force_prerelease:
+        description: "Force prerelease publishing (overrides auto-detection)"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   publish-nuget:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate input
+      - name: Validate input and detect release type
+        id: release_info
         run: |
-          if [[ "${{ github.event.inputs.version_tag }}" != v* ]]; then
-            echo "Error: Version tag must start with 'v' (e.g., v1.0.0)"
+          VERSION_TAG="${{ github.event.inputs.version_tag }}"
+          FORCE_PRERELEASE="${{ github.event.inputs.force_prerelease }}"
+
+          # Validate version tag format
+          if [[ "$VERSION_TAG" != v* ]]; then
+            echo "Error: Version tag must start with 'v' (e.g., v1.0.0 or v1.0.0-beta.1)"
             exit 1
           fi
-          echo "Publishing version: ${{ github.event.inputs.version_tag }}"
+
+          # Auto-detect if this is a prerelease based on version tag
+          if [[ "$VERSION_TAG" == *"-"* ]] || [[ "$FORCE_PRERELEASE" == "true" ]]; then
+            IS_PRERELEASE="true"
+            RELEASE_TYPE="🧪 Prerelease"
+            NUGET_FLAGS="--skip-duplicate"
+          else
+            IS_PRERELEASE="false"
+            RELEASE_TYPE="📦 Stable Release"
+            NUGET_FLAGS="--skip-duplicate"
+          fi
+
+          # Output information
+          echo "🚀 NuGet Publishing Information:"
+          echo "  Version: $VERSION_TAG"
+          echo "  Type: $RELEASE_TYPE"
+          echo "  Is Prerelease: $IS_PRERELEASE"
+          echo "  Force Prerelease: $FORCE_PRERELEASE"
+
+          # Set outputs for later steps
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+          echo "nuget_flags=$NUGET_FLAGS" >> $GITHUB_OUTPUT
+          echo "version_tag=$VERSION_TAG" >> $GITHUB_OUTPUT
 
       - name: Download release NuGet packages
         uses: dawidd6/action-download-artifact@v6
@@ -30,16 +63,89 @@ jobs:
           workflow_conclusion: success
           name: nuget-package
           path: ./artifacts
+          # Download from the specific release tag
+          check_artifacts: true
 
-      - name: Publish all packages to NuGet.org
+      - name: Verify downloaded packages
+        run: |
+          echo "📦 Downloaded NuGet packages:"
+          find ./artifacts -name "*.nupkg" -o -name "*.snupkg" | while read pkg; do
+            echo "  - $(basename "$pkg")"
+          done
+
+          # Check if any packages were found
+          if ! find ./artifacts -name "*.nupkg" | grep -q .; then
+            echo "❌ Error: No .nupkg files found in artifacts"
+            exit 1
+          fi
+
+      - name: Pre-publish summary
+        run: |
+          RELEASE_TYPE="${{ steps.release_info.outputs.release_type }}"
+          IS_PRERELEASE="${{ steps.release_info.outputs.is_prerelease }}"
+          VERSION_TAG="${{ steps.release_info.outputs.version_tag }}"
+
+          echo "📋 NuGet Publishing Plan:"
+          echo "  🏷️  Version: $VERSION_TAG"
+          echo "  📦 Type: $RELEASE_TYPE"
+          echo "  🎯 Target: NuGet.org"
+          echo ""
+
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            echo "🧪 PRERELEASE PUBLISHING:"
+            echo "  • Packages will be marked as prerelease"
+            echo "  • Users need to opt-in to see these versions"
+            echo "  • Install with: dotnet add package <name> --prerelease"
+          else
+            echo "📦 STABLE PUBLISHING:"
+            echo "  • Packages will be marked as stable release"
+            echo "  • Available in default NuGet searches"
+            echo "  • Install with: dotnet add package <name>"
+          fi
+          echo ""
+
+      - name: Publish packages to NuGet.org
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          # Veröffentliche alle NuGet-Pakete und Symbol-Pakete
+          RELEASE_TYPE="${{ steps.release_info.outputs.release_type }}"
+          IS_PRERELEASE="${{ steps.release_info.outputs.is_prerelease }}"
+          VERSION_TAG="${{ steps.release_info.outputs.version_tag }}"
+
+          echo "🚀 Starting NuGet publishing process..."
+          echo "  Release Type: $RELEASE_TYPE"
+          echo "  Version: $VERSION_TAG"
+
+          # Publish all NuGet packages and symbol packages
+          SUCCESS_COUNT=0
+          ERROR_COUNT=0
+
           for pkg in ./artifacts/*.{nupkg,snupkg}; do
             if [ -f "$pkg" ]; then
-              echo "Publishing $pkg..."
-              dotnet nuget push "$pkg" --api-key "$NUGET_API_KEY" \
-                --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+              PKG_NAME=$(basename "$pkg")
+              echo "📤 Publishing $PKG_NAME..."
+
+              if dotnet nuget push "$pkg" --api-key "$NUGET_API_KEY" \
+                --source "https://api.nuget.org/v3/index.json" \
+                ${{ steps.release_info.outputs.nuget_flags }}; then
+                echo "✅ Successfully published $PKG_NAME"
+                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+              else
+                echo "❌ Failed to publish $PKG_NAME"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              fi
             fi
           done
+
+          echo ""
+          echo "📊 Publishing Summary:"
+          echo "  ✅ Successful: $SUCCESS_COUNT packages"
+          echo "  ❌ Failed: $ERROR_COUNT packages"
+          echo "  🏷️ Release Type: $RELEASE_TYPE"
+
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo "⚠️ Some packages failed to publish"
+            exit 1
+          else
+            echo "🎉 All packages published successfully!"
+          fi
