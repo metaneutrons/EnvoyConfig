@@ -199,11 +199,154 @@ namespace EnvoyConfig.Tests
             Environment.SetEnvironmentVariable(name, value);
         }
 
+        [Fact]
+        public void Load_SingleRadioStation_WithAllProperties()
+        {
+            // Arrange
+            SetEnvironmentVariable("SNAPDOG_RADIO_1_NAME", "DLF Kultur");
+            SetEnvironmentVariable("SNAPDOG_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
+
+            try
+            {
+                // Act
+                var config = EnvConfig.Load<SnapdogConfig>();
+
+                // Assert
+                Assert.Single(config.RadioStations);
+
+                var radioStation = config.RadioStations[0];
+                Assert.Equal("DLF Kultur", radioStation.Name);
+                Assert.Equal("https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac", radioStation.URL);
+            }
+            finally
+            {
+                ClearSnapdogEnvironmentVariables();
+            }
+        }
+
+        [Fact]
+        public void Load_MultipleRadioStations_WithDifferentConfigurations()
+        {
+            // Arrange
+            // Radio Station 1
+            SetEnvironmentVariable("SNAPDOG_RADIO_1_NAME", "DLF Kultur");
+            SetEnvironmentVariable("SNAPDOG_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
+
+            // Radio Station 2
+            SetEnvironmentVariable("SNAPDOG_RADIO_2_NAME", "MDR Kultur");
+            SetEnvironmentVariable("SNAPDOG_RADIO_2_URL", "http://avw.mdr.de/streams/284310-0_aac_high.m3u");
+
+            // Radio Station 3
+            SetEnvironmentVariable("SNAPDOG_RADIO_3_NAME", "WDR 3");
+            SetEnvironmentVariable(
+                "SNAPDOG_RADIO_3_URL",
+                "https://wdr-wdr3-live.icecastssl.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3"
+            );
+
+            try
+            {
+                // Act
+                var config = EnvConfig.Load<SnapdogConfig>();
+
+                // Assert
+                Assert.Equal(3, config.RadioStations.Count);
+
+                // Radio Station 1
+                var radio1 = config.RadioStations[0];
+                Assert.Equal("DLF Kultur", radio1.Name);
+                Assert.Equal("https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac", radio1.URL);
+
+                // Radio Station 2
+                var radio2 = config.RadioStations[1];
+                Assert.Equal("MDR Kultur", radio2.Name);
+                Assert.Equal("http://avw.mdr.de/streams/284310-0_aac_high.m3u", radio2.URL);
+
+                // Radio Station 3
+                var radio3 = config.RadioStations[2];
+                Assert.Equal("WDR 3", radio3.Name);
+                Assert.Equal("https://wdr-wdr3-live.icecastssl.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3", radio3.URL);
+            }
+            finally
+            {
+                ClearSnapdogEnvironmentVariables();
+            }
+        }
+
+        [Fact]
+        public void Load_EmptyRadioConfiguration_ReturnsEmptyRadioList()
+        {
+            // Act
+            var config = EnvConfig.Load<SnapdogConfig>();
+
+            // Assert
+            Assert.Empty(config.RadioStations);
+        }
+
+        [Fact]
+        public void Load_PartialRadioConfiguration_HandledGracefully()
+        {
+            // Arrange - Only set NAME for radio station 1, missing URL
+            SetEnvironmentVariable("SNAPDOG_RADIO_1_NAME", "Incomplete Station");
+
+            try
+            {
+                // Act
+                var config = EnvConfig.Load<SnapdogConfig>();
+
+                // Assert
+                Assert.Single(config.RadioStations);
+                var radioStation = config.RadioStations[0];
+                Assert.Equal("Incomplete Station", radioStation.Name);
+                // URL should be null or empty since it wasn't provided
+                Assert.True(string.IsNullOrEmpty(radioStation.URL) || radioStation.URL == null!);
+            }
+            finally
+            {
+                ClearSnapdogEnvironmentVariables();
+            }
+        }
+
+        [Fact]
+        public void Load_ClientsAndRadioStations_BothLoadCorrectly()
+        {
+            // Arrange
+            // Client configuration
+            SetEnvironmentVariable("SNAPDOG_CLIENT_1_NAME", "Living Room");
+            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MAC", "02:42:ac:11:00:10");
+            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_BASETOPIC", "snapdog/clients/livingroom");
+
+            // Radio station configuration
+            SetEnvironmentVariable("SNAPDOG_RADIO_1_NAME", "DLF Kultur");
+            SetEnvironmentVariable("SNAPDOG_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
+
+            try
+            {
+                // Act
+                var config = EnvConfig.Load<SnapdogConfig>();
+
+                // Assert
+                Assert.Single(config.Clients);
+                Assert.Single(config.RadioStations);
+
+                var client = config.Clients[0];
+                Assert.Equal("Living Room", client.Name);
+                Assert.Equal("02:42:ac:11:00:10", client.Mac);
+
+                var radioStation = config.RadioStations[0];
+                Assert.Equal("DLF Kultur", radioStation.Name);
+                Assert.Equal("https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac", radioStation.URL);
+            }
+            finally
+            {
+                ClearSnapdogEnvironmentVariables();
+            }
+        }
+
         private static void ClearSnapdogEnvironmentVariables()
         {
             foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
-                if (entry.Key is string key && key.StartsWith("SNAPDOG_CLIENT_"))
+                if (entry.Key is string key && (key.StartsWith("SNAPDOG_CLIENT_") || key.StartsWith("SNAPDOG_RADIO_")))
                 {
                     Environment.SetEnvironmentVariable(key, null);
                 }

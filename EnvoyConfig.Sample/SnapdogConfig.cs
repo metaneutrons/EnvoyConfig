@@ -25,5 +25,19 @@ namespace EnvoyConfig.Sample
         /// </summary>
         [Env(NestedListPrefix = "SNAPDOG_CLIENT_", NestedListSuffix = "_")]
         public List<ClientConfig> Clients { get; set; } = [];
+
+        /// <summary>
+        /// Gets or sets the list of SNAPDOG radio station configurations.
+        /// Maps environment variables with pattern: SNAPDOG_RADIO_X_*
+        /// Where X is the radio station index (1, 2, 3, etc.)
+        ///
+        /// Example mappings:
+        /// - SNAPDOG_RADIO_1_NAME → RadioStations[0].Name
+        /// - SNAPDOG_RADIO_1_URL → RadioStations[0].URL
+        /// - SNAPDOG_RADIO_2_NAME → RadioStations[1].Name
+        /// - SNAPDOG_RADIO_2_URL → RadioStations[1].URL
+        /// </summary>
+        [Env(NestedListPrefix = "SNAPDOG_RADIO_", NestedListSuffix = "_")]
+        public List<RadioStation> RadioStations { get; set; } = [];
     }
 }

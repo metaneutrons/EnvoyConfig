@@ -179,6 +179,28 @@ internal class Program
 
         // Display SNAPDOG clients configuration - NEW SECTION
         DisplaySnapdogClients(config.SnapdogClients);
+
+        // Display radio stations
+        if (config.RadioStations != null && config.RadioStations.Count > 0)
+        {
+            AnsiConsole.WriteLine();
+            AnsiConsole.Write(new Rule("[green]Radio Stations[/]").RuleStyle("green"));
+            AnsiConsole.WriteLine();
+
+            for (int i = 0; i < config.RadioStations.Count; i++)
+            {
+                var station = config.RadioStations[i];
+                PrintSection(
+                    $"Radio Station {i + 1}: {station.Name}",
+                    "📻",
+                    [("Name", typeof(string).Name, station.Name), ("URL", typeof(string).Name, station.URL)]
+                );
+            }
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[yellow]No radio stations configured.[/]");
+        }
     }
 
     private static void DisplaySnapdogClients(System.Collections.Generic.List<ClientConfig> clients)

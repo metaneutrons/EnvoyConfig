@@ -65,4 +65,11 @@ public class SampleConfig
     /// </summary>
     [Env(NestedListPrefix = "CLIENT_", NestedListSuffix = "_")]
     public List<ClientConfig> SnapdogClients { get; set; } = [];
+
+    /// <summary>
+    /// List of radio station configurations for the SNAPDOG system.
+    /// Each station includes a name and URL for streaming.
+    /// </summary>
+    [Env(NestedListPrefix = "RADIO_", NestedListSuffix = "_")]
+    public List<RadioStation> RadioStations { get; set; } = [];
 }
