@@ -64,9 +64,17 @@ jobs:
         with:
           useConfigFile: true
           updateAssemblyInfo: true
+        env:
+          # Override GitHub's branch detection to use the actual selected branch
+          GITHUB_REF: refs/heads/${{ github.event.inputs.branch || github.head_ref || github.ref_name }}
 
       - name: Display version information
         run: |
+          SELECTED_BRANCH="${{ github.event.inputs.branch || github.head_ref || github.ref_name }}"
+          echo "📋 Branch Information:"
+          echo "  Selected branch: $SELECTED_BRANCH"
+          echo "  GITHUB_REF override: refs/heads/$SELECTED_BRANCH"
+          echo ""
           echo "📋 GitVersion Results:"
           echo "  SemVer: ${{ steps.gitversion.outputs.semVer }}"
           echo "  FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
@@ -74,6 +82,11 @@ jobs:
           echo "  BranchName: ${{ steps.gitversion.outputs.branchName }}"
           echo "  PreReleaseTag: '${{ steps.gitversion.outputs.preReleaseTag }}'"
           echo "  IsPreRelease: ${{ steps.gitversion.outputs.preReleaseTag != '' }}"
+          echo ""
+          echo "🔍 Branch Detection Check:"
+          echo "  GitVersion sees branch as: ${{ steps.gitversion.outputs.branchName }}"
+          echo "  Should match selected: $SELECTED_BRANCH"
+          echo "  Match status: ${{ steps.gitversion.outputs.branchName == (github.event.inputs.branch || github.head_ref || github.ref_name) && 'CORRECT' || 'MISMATCH' }}"
 
       - name: Validate manual tag and compare with GitVersion
         id: validate_tag
