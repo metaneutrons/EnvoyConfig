@@ -28,6 +28,7 @@
     <Company>metaneutrons</Company>
     <Copyright>Copyright © $([System.DateTime]::Now.Year) Fabian Schmieder</Copyright>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageIcon>nuget-icon.png</PackageIcon>
     <NeutralLanguage>en</NeutralLanguage>
     <RepositoryUrl>https://github.com/metaneutrons/EnvoyConfig</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -37,5 +38,9 @@
 
   <ItemGroup>
     <PackageReference Include="GitVersion.MsBuild" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)assets\nuget-icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
