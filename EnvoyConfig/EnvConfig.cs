@@ -47,4 +47,62 @@ public static class EnvConfig
     /// </example>
     public static T Load<T>(IEnvLogSink? logger = null)
         where T : new() => ReflectionHelper.PopulateInstance<T>(logger, GlobalPrefix);
+
+    /// <summary>
+    /// Saves the current configuration values to a .env file.
+    /// </summary>
+    /// <typeparam name="T">The type of the configuration class to serialize.</typeparam>
+    /// <param name="instance">The configuration instance to save.</param>
+    /// <param name="filePath">The path where the .env file should be saved.</param>
+    /// <param name="logger">Optional logger for warnings and errors.</param>
+    /// <exception cref="ArgumentNullException">Thrown if instance or filePath is null.</exception>
+    /// <exception cref="IOException">Thrown if file writing fails.</exception>
+    /// <remarks>
+    /// This method uses reflection to find properties marked with the <see cref="Attributes.EnvAttribute"/>.
+    /// It generates environment variable assignments based on the current property values.
+    /// The GlobalPrefix is automatically applied to all variable names.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var config = EnvConfig.Load&lt;AppSettings&gt;();
+    /// EnvConfig.Save(config, "current-config.env");
+    /// </code>
+    /// </example>
+    public static void Save<T>(T instance, string filePath, IEnvLogSink? logger = null)
+    {
+        if (instance == null)
+            throw new ArgumentNullException(nameof(instance));
+        if (string.IsNullOrEmpty(filePath))
+            throw new ArgumentNullException(nameof(filePath));
+
+        ReflectionHelper.SaveToFile(instance, filePath, GlobalPrefix, logger, useDefaults: false);
+    }
+
+    /// <summary>
+    /// Saves a template .env file with default values and structure for the specified configuration class.
+    /// </summary>
+    /// <typeparam name="T">The type of the configuration class to generate defaults for. Must have a parameterless constructor.</typeparam>
+    /// <param name="filePath">The path where the .env template file should be saved.</param>
+    /// <param name="logger">Optional logger for warnings and errors.</param>
+    /// <exception cref="ArgumentNullException">Thrown if filePath is null.</exception>
+    /// <exception cref="IOException">Thrown if file writing fails.</exception>
+    /// <remarks>
+    /// This method creates a template .env file showing the structure and default values of the configuration class.
+    /// Properties without defaults will have empty values, and nested lists will include single placeholder entries.
+    /// The GlobalPrefix is automatically applied to all variable names.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// EnvConfig.SaveDefaults&lt;AppSettings&gt;("config-template.env");
+    /// </code>
+    /// </example>
+    public static void SaveDefaults<T>(string filePath, IEnvLogSink? logger = null)
+        where T : new()
+    {
+        if (string.IsNullOrEmpty(filePath))
+            throw new ArgumentNullException(nameof(filePath));
+
+        var defaultInstance = new T();
+        ReflectionHelper.SaveToFile(defaultInstance, filePath, GlobalPrefix, logger, useDefaults: true);
+    }
 }

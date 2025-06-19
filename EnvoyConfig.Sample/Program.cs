@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using dotenv.net;
@@ -16,6 +17,9 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        // Parse command-line arguments for save operations
+        var saveOperations = ParseCommandLineArguments(args);
+
         // Register the custom KnxAddress converter first
         RegisterCustomConverters();
 
@@ -33,13 +37,81 @@ internal class Program
         // Set global prefix
         EnvConfig.GlobalPrefix = "SNAPDOG_";
 
+        // Create logger for both config loading and save operations
+        var logger = new SpectreConsoleLogSink();
+
         // Load config using SampleConfig (which now includes SnapdogClients)
-        var config = EnvConfig.Load<SampleConfig>(new SpectreConsoleLogSink());
+        var config = EnvConfig.Load<SampleConfig>(logger);
 
         DisplayHeader();
         DisplayEnvironmentVariables();
         DisplayConfiguration(config);
         DisplayFooter();
+
+        // Process save operations if any were specified
+        ProcessSaveOperations(saveOperations, config, logger);
+    }
+
+    private static List<(string operation, string filename)> ParseCommandLineArguments(string[] args)
+    {
+        var saveOperations = new List<(string operation, string filename)>();
+
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--save" && i + 1 < args.Length)
+            {
+                saveOperations.Add(("save", args[i + 1]));
+                i++; // Skip the filename argument
+            }
+            else if (args[i] == "--save-defaults" && i + 1 < args.Length)
+            {
+                saveOperations.Add(("save-defaults", args[i + 1]));
+                i++; // Skip the filename argument
+            }
+        }
+
+        return saveOperations;
+    }
+
+    private static void ProcessSaveOperations(
+        List<(string operation, string filename)> saveOperations,
+        SampleConfig config,
+        SpectreConsoleLogSink logger
+    )
+    {
+        if (saveOperations.Count == 0)
+            return;
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(new Rule("[blue]Save Operations[/]").RuleStyle("blue"));
+        AnsiConsole.WriteLine();
+
+        foreach (var (operation, filename) in saveOperations)
+        {
+            try
+            {
+                if (operation == "save")
+                {
+                    EnvConfig.Save(config, filename, logger);
+                    AnsiConsole.MarkupLine(
+                        $"[green]✓ Successfully saved current configuration to:[/] [white]{filename}[/]"
+                    );
+                }
+                else if (operation == "save-defaults")
+                {
+                    EnvConfig.SaveDefaults<SampleConfig>(filename, logger);
+                    AnsiConsole.MarkupLine(
+                        $"[green]✓ Successfully saved defaults template to:[/] [white]{filename}[/]"
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[red]❌ Error saving to {filename}: {ex.Message}[/]");
+            }
+        }
+
+        AnsiConsole.WriteLine();
     }
 
     private static void RegisterCustomConverters()
