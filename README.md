@@ -49,6 +49,12 @@ public class MyConfig {
 
 EnvConfig.GlobalPrefix = "MYAPP_";
 var config = EnvConfig.Load<MyConfig>();
+
+// Save current configuration to .env file
+EnvConfig.Save(config, "current-config.env");
+
+// Save defaults template to .env file
+EnvConfig.SaveDefaults<MyConfig>("template.env");
 ```
 
 ## 🔧 Advanced Usage & Features
@@ -75,7 +81,7 @@ See here for [Documentation](https://metaneutrons.github.io/EnvoyConfig).
 
 EnvoyConfig allows you to define and register custom converters for types that are not natively supported or when you need specific parsing logic.
 
-1.  **Implement `ITypeConverter`:**
+1. **Implement `ITypeConverter`:**
     Create a class that implements the `EnvoyConfig.Conversion.ITypeConverter` interface. The core method is `object? Convert(string? value, Type targetType, IEnvLogSink? logger)`.
 
     ```csharp
@@ -98,7 +104,7 @@ EnvoyConfig allows you to define and register custom converters for types that a
     }
     ```
 
-2.  **Register the Converter:**
+2. **Register the Converter:**
     Before loading your configuration, register an instance of your converter:
 
     ```csharp
@@ -113,9 +119,9 @@ EnvoyConfig allows you to define and register custom converters for types that a
 
 Control how EnvoyConfig behaves when a type conversion from a string environment variable to a target property type fails:
 
-*   **`EnvConfig.ThrowOnConversionError` (static property):**
-    *   `false` (Default): If a conversion fails (e.g., "abc" cannot be parsed as an `int`), EnvoyConfig logs an error (if a logger is provided) and the property is set to its default C# value (e.g., `0` for `int`, `null` for reference types).
-    *   `true`: If a conversion fails, EnvoyConfig will throw an `InvalidOperationException` detailing the conversion issue. This allows for immediate and strict error handling.
+- **`EnvConfig.ThrowOnConversionError` (static property):**
+  - `false` (Default): If a conversion fails (e.g., "abc" cannot be parsed as an `int`), EnvoyConfig logs an error (if a logger is provided) and the property is set to its default C# value (e.g., `0` for `int`, `null` for reference types).
+  - `true`: If a conversion fails, EnvoyConfig will throw an `InvalidOperationException` detailing the conversion issue. This allows for immediate and strict error handling.
 
     ```csharp
     // Example:
