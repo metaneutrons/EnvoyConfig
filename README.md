@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/logo.svg" alt="EnvoyConfig Logo" width="64"/>
-</p>
+![EnvoyConfig Logo](assets/nuget-icon.png)
 
 # 🚀 EnvoyConfig
 
