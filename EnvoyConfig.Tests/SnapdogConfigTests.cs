@@ -26,21 +26,21 @@ namespace EnvoyConfig.Tests
         public void Load_SingleClient_WithAllProperties()
         {
             // Arrange
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_NAME", "Living Room");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MAC", "02:42:ac:11:00:10");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_BASETOPIC", "snapdog/clients/livingroom");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_DEFAULT_ZONE", "1");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_NAME", "Living Room");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MAC", "02:42:ac:11:00:10");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_BASETOPIC", "snapdog/clients/livingroom");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_DEFAULT_ZONE", "1");
 
             // MQTT topics
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_VOLUME_SET_TOPIC", "volume/set");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_MUTE_SET_TOPIC", "mute/set");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_CONTROL_TOPIC", "control");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_STATE_TOPIC", "state");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_VOLUME_SET_TOPIC", "volume/set");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_MUTE_SET_TOPIC", "mute/set");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_CONTROL_TOPIC", "control");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_STATE_TOPIC", "state");
 
             // KNX configuration
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_ENABLED", "true");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_VOLUME", "2/1/1");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_MUTE", "2/1/5");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_ENABLED", "true");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_VOLUME", "2/1/1");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_MUTE", "2/1/5");
 
             try
             {
@@ -80,20 +80,20 @@ namespace EnvoyConfig.Tests
         {
             // Arrange
             // Client 1 - Full configuration
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_NAME", "Living Room");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MAC", "02:42:ac:11:00:10");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_BASETOPIC", "snapdog/clients/livingroom");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_DEFAULT_ZONE", "1");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_VOLUME_SET_TOPIC", "volume/set");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_ENABLED", "true");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_VOLUME", "2/1/1");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_NAME", "Living Room");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MAC", "02:42:ac:11:00:10");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_BASETOPIC", "snapdog/clients/livingroom");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_DEFAULT_ZONE", "1");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_VOLUME_SET_TOPIC", "volume/set");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_ENABLED", "true");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_VOLUME", "2/1/1");
 
             // Client 2 - Minimal configuration
-            SetEnvironmentVariable("SNAPDOG_CLIENT_2_NAME", "Kitchen");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_2_MAC", "02:42:ac:11:00:20");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_2_MQTT_BASETOPIC", "snapdog/clients/kitchen");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_2_MQTT_CONTROL_TOPIC", "control");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_2_KNX_ENABLED", "false");
+            SetEnvironmentVariable("MYAPP_CLIENT_2_NAME", "Kitchen");
+            SetEnvironmentVariable("MYAPP_CLIENT_2_MAC", "02:42:ac:11:00:20");
+            SetEnvironmentVariable("MYAPP_CLIENT_2_MQTT_BASETOPIC", "snapdog/clients/kitchen");
+            SetEnvironmentVariable("MYAPP_CLIENT_2_MQTT_CONTROL_TOPIC", "control");
+            SetEnvironmentVariable("MYAPP_CLIENT_2_KNX_ENABLED", "false");
 
             try
             {
@@ -129,12 +129,12 @@ namespace EnvoyConfig.Tests
         public void Load_KnxAddress_ParsesCorrectly()
         {
             // Arrange
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_NAME", "Test Client");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MAC", "02:42:ac:11:00:10");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_BASETOPIC", "test/topic");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_ENABLED", "true");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_VOLUME", "15/7/255");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_MUTE", "0/0/1");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_NAME", "Test Client");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MAC", "02:42:ac:11:00:10");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_BASETOPIC", "test/topic");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_ENABLED", "true");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_VOLUME", "15/7/255");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_MUTE", "0/0/1");
 
             try
             {
@@ -163,11 +163,11 @@ namespace EnvoyConfig.Tests
         public void Load_InvalidKnxAddress_HandledGracefully()
         {
             // Arrange
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_NAME", "Test Client");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MAC", "02:42:ac:11:00:10");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_BASETOPIC", "test/topic");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_ENABLED", "true");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_KNX_VOLUME", "invalid/address/format");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_NAME", "Test Client");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MAC", "02:42:ac:11:00:10");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_BASETOPIC", "test/topic");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_ENABLED", "true");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_KNX_VOLUME", "invalid/address/format");
 
             try
             {
@@ -203,8 +203,8 @@ namespace EnvoyConfig.Tests
         public void Load_SingleRadioStation_WithAllProperties()
         {
             // Arrange
-            SetEnvironmentVariable("SNAPDOG_RADIO_1_NAME", "DLF Kultur");
-            SetEnvironmentVariable("SNAPDOG_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
+            SetEnvironmentVariable("MYAPP_RADIO_1_NAME", "DLF Kultur");
+            SetEnvironmentVariable("MYAPP_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
 
             try
             {
@@ -229,17 +229,17 @@ namespace EnvoyConfig.Tests
         {
             // Arrange
             // Radio Station 1
-            SetEnvironmentVariable("SNAPDOG_RADIO_1_NAME", "DLF Kultur");
-            SetEnvironmentVariable("SNAPDOG_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
+            SetEnvironmentVariable("MYAPP_RADIO_1_NAME", "DLF Kultur");
+            SetEnvironmentVariable("MYAPP_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
 
             // Radio Station 2
-            SetEnvironmentVariable("SNAPDOG_RADIO_2_NAME", "MDR Kultur");
-            SetEnvironmentVariable("SNAPDOG_RADIO_2_URL", "http://avw.mdr.de/streams/284310-0_aac_high.m3u");
+            SetEnvironmentVariable("MYAPP_RADIO_2_NAME", "MDR Kultur");
+            SetEnvironmentVariable("MYAPP_RADIO_2_URL", "http://avw.mdr.de/streams/284310-0_aac_high.m3u");
 
             // Radio Station 3
-            SetEnvironmentVariable("SNAPDOG_RADIO_3_NAME", "WDR 3");
+            SetEnvironmentVariable("MYAPP_RADIO_3_NAME", "WDR 3");
             SetEnvironmentVariable(
-                "SNAPDOG_RADIO_3_URL",
+                "MYAPP_RADIO_3_URL",
                 "https://wdr-wdr3-live.icecastssl.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3"
             );
 
@@ -286,7 +286,7 @@ namespace EnvoyConfig.Tests
         public void Load_PartialRadioConfiguration_HandledGracefully()
         {
             // Arrange - Only set NAME for radio station 1, missing URL
-            SetEnvironmentVariable("SNAPDOG_RADIO_1_NAME", "Incomplete Station");
+            SetEnvironmentVariable("MYAPP_RADIO_1_NAME", "Incomplete Station");
 
             try
             {
@@ -311,13 +311,13 @@ namespace EnvoyConfig.Tests
         {
             // Arrange
             // Client configuration
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_NAME", "Living Room");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MAC", "02:42:ac:11:00:10");
-            SetEnvironmentVariable("SNAPDOG_CLIENT_1_MQTT_BASETOPIC", "snapdog/clients/livingroom");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_NAME", "Living Room");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MAC", "02:42:ac:11:00:10");
+            SetEnvironmentVariable("MYAPP_CLIENT_1_MQTT_BASETOPIC", "snapdog/clients/livingroom");
 
             // Radio station configuration
-            SetEnvironmentVariable("SNAPDOG_RADIO_1_NAME", "DLF Kultur");
-            SetEnvironmentVariable("SNAPDOG_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
+            SetEnvironmentVariable("MYAPP_RADIO_1_NAME", "DLF Kultur");
+            SetEnvironmentVariable("MYAPP_RADIO_1_URL", "https://st02.sslstream.dlf.de/dlf/02/high/aac/stream.aac");
 
             try
             {
@@ -346,7 +346,7 @@ namespace EnvoyConfig.Tests
         {
             foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
-                if (entry.Key is string key && (key.StartsWith("SNAPDOG_CLIENT_") || key.StartsWith("SNAPDOG_RADIO_")))
+                if (entry.Key is string key && (key.StartsWith("MYAPP_CLIENT_") || key.StartsWith("MYAPP_RADIO_")))
                 {
                     Environment.SetEnvironmentVariable(key, null);
                 }

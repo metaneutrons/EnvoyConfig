@@ -1,16 +1,11 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Text;
 using EnvoyConfig.Attributes;
-using EnvoyConfig.Conversion; // Added for ITypeConverter and TypeConverterRegistry
+using EnvoyConfig.Conversion;
 using EnvoyConfig.Logging;
 
 namespace EnvoyConfig.Internal;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 /// <summary>
 /// Handles reflection, attribute discovery, and instance population for EnvConfig.
@@ -593,7 +588,7 @@ public static class ReflectionHelper
         var envVars = Environment.GetEnvironmentVariables();
         var prefix = globalPrefix + (attr.NestedListPrefix ?? "");
         var suffix = attr.NestedListSuffix ?? "";
-        // Find all keys like SNAPDOG_ZONE_1_MQTT_*
+        // Find all keys like MYAPP_ZONE_1_MQTT_*
         var indices = new HashSet<string>();
         foreach (System.Collections.DictionaryEntry e in envVars)
         {

@@ -53,12 +53,12 @@ namespace EnvoyConfig.Attributes
 
         /// <summary>
         /// When set, enables automatic discovery and population of a list of nested objects. All environment variables matching [NestedListPrefix][index][NestedListSuffix][key] will be grouped and used to create objects.
-        /// Example: SNAPDOG_ZONE_1_MQTT_CONTROL_SET_TOPIC, SNAPDOG_ZONE_2_MQTT_CONTROL_SET_TOPIC, etc.
+        /// Example: MYAPP_ZONE_1_MQTT_CONTROL_SET_TOPIC, MYAPP_ZONE_2_MQTT_CONTROL_SET_TOPIC, etc.
         /// </summary>
         public string? NestedListPrefix { get; set; }
 
         /// <summary>
-        /// Suffix after the index for NestedListPrefix. Example: for SNAPDOG_ZONE_1_MQTT_, prefix is ZONE_, suffix is _MQTT_.
+        /// Suffix after the index for NestedListPrefix. Example: for MYAPP_ZONE_1_MQTT_, prefix is ZONE_, suffix is _MQTT_.
         /// </summary>
         public string? NestedListSuffix { get; set; }
 
