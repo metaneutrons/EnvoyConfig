@@ -15,10 +15,12 @@
     <PackageVersion Include="dotenv.net" Version="3.2.1" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.6" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
+    <!-- Removed Microsoft.CodeAnalysis.Analyzers to prevent System.Collections.Immutable version
+    conflicts -->
+    <!-- <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageVersion>
+    </PackageVersion> -->
     <PackageVersion Include="NLog" Version="6.0.0" />
     <PackageVersion Include="Serilog" Version="4.3.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />

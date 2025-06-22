@@ -18,10 +18,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <!-- Removed Microsoft.CodeAnalysis.Analyzers to prevent CS8032 errors in CI/Release builds -->
     <ProjectReference Include="../EnvoyConfig/EnvoyConfig.csproj" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
