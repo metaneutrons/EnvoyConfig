@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using dotenv.net;
 using EnvoyConfig;
 using EnvoyConfig.Conversion;
@@ -44,6 +45,7 @@ internal class Program
         var config = EnvConfig.Load<SampleConfig>(logger);
 
         DisplayHeader();
+        DisplayVersionInformation();
         DisplayEnvironmentVariables();
         DisplayConfiguration(config);
         DisplayFooter();
@@ -127,6 +129,179 @@ internal class Program
         AnsiConsole.MarkupLine($"[bold yellow]🐶 Welcome to the Snapdog Sample Application![/]");
         AnsiConsole.MarkupLine($"[bold blue]Loaded configuration from:[/] [white]sample.env[/]");
         AnsiConsole.WriteLine();
+    }
+
+    private static void DisplayVersionInformation()
+    {
+        try
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Get version information from assembly attributes
+            var assemblyVersion = assembly.GetName().Version?.ToString() ?? "Unknown";
+            var fileVersion = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "Unknown";
+            var informationalVersion =
+                assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "Unknown";
+            var configuration =
+                assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration ?? "Unknown";
+
+            // Try to get GitVersion information from multiple sources
+            var gitVersionType = assembly.GetTypes().FirstOrDefault(t => t.Name == "GitVersionInformation");
+
+            // Also try to find any other GitVersion-related types
+            var allGitVersionTypes = assembly
+                .GetTypes()
+                .Where(t => t.Name.Contains("GitVersion", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            AnsiConsole.Write(new Rule("[blue]Version Information[/]").RuleStyle("blue"));
+
+            var versionTable = new Table().NoBorder();
+            versionTable.AddColumn(new TableColumn("[grey]Property[/]").LeftAligned());
+            versionTable.AddColumn(new TableColumn("[grey]Value[/]").LeftAligned());
+
+            versionTable.AddRow("[white]Assembly Version[/]", $"[bold cyan]{assemblyVersion}[/]");
+            versionTable.AddRow("[white]File Version[/]", $"[bold cyan]{fileVersion}[/]");
+            versionTable.AddRow("[white]Informational Version[/]", $"[bold cyan]{informationalVersion}[/]");
+            versionTable.AddRow("[white]Configuration[/]", $"[bold cyan]{configuration}[/]");
+
+            // Parse more detailed version information from InformationalVersion
+            if (!string.IsNullOrEmpty(informationalVersion) && informationalVersion != "Unknown")
+            {
+                var parts = informationalVersion.Split('+');
+                if (parts.Length > 0)
+                {
+                    var version = parts[0]; // e.g., "0.1.0-beta.87"
+                    versionTable.AddRow("[white]SemVer[/]", $"[bold yellow]{version}[/]");
+
+                    if (parts.Length > 1)
+                    {
+                        var metadata = parts[1]; // e.g., "Branch.develop.Sha.27335d6..."
+                        var metadataParts = metadata.Split('.');
+
+                        for (int i = 0; i < metadataParts.Length; i += 2)
+                        {
+                            if (i + 1 < metadataParts.Length)
+                            {
+                                var key = metadataParts[i];
+                                var value = metadataParts[i + 1];
+
+                                if (key.Equals("Branch", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    versionTable.AddRow("[white]Git Branch[/]", $"[bold green]{value}[/]");
+                                }
+                                else if (key.Equals("Sha", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // Show only first 8 characters of SHA for readability
+                                    var shortSha = value.Length > 8 ? value.Substring(0, 8) : value;
+                                    versionTable.AddRow("[white]Git Commit[/]", $"[bold magenta]{shortSha}[/]");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Add detailed GitVersion information section
+            versionTable.AddRow("", ""); // Empty row for spacing
+            versionTable.AddRow("[bold white]GitVersion Details[/]", "");
+
+            if (gitVersionType != null)
+            {
+                // Get all public static properties from GitVersionInformation
+                var properties = gitVersionType
+                    .GetProperties(BindingFlags.Public | BindingFlags.Static)
+                    .OrderBy(p => p.Name);
+
+                var gitVersionInfo = new List<(string key, string value)>();
+
+                foreach (var prop in properties)
+                {
+                    try
+                    {
+                        var value = prop.GetValue(null)?.ToString();
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            gitVersionInfo.Add((prop.Name, value));
+                        }
+                    }
+                    catch
+                    {
+                        // Skip properties that can't be read
+                    }
+                }
+
+                if (gitVersionInfo.Count > 0)
+                {
+                    // Display key GitVersion properties
+                    var importantProps = new[]
+                    {
+                        "MajorMinorPatch",
+                        "SemVer",
+                        "FullSemVer",
+                        "BranchName",
+                        "Sha",
+                        "CommitDate",
+                        "VersionSourceSha",
+                        "CommitsSinceVersionSource",
+                    };
+
+                    foreach (var propName in importantProps)
+                    {
+                        var prop = gitVersionInfo.FirstOrDefault(p =>
+                            p.key.Equals(propName, StringComparison.OrdinalIgnoreCase)
+                        );
+                        if (!string.IsNullOrEmpty(prop.value))
+                        {
+                            var displayName = propName switch
+                            {
+                                "MajorMinorPatch" => "Version",
+                                "BranchName" => "Branch",
+                                "Sha" => "Commit SHA",
+                                "CommitDate" => "Commit Date",
+                                "VersionSourceSha" => "Version Source SHA",
+                                "CommitsSinceVersionSource" => "Commits Since Version",
+                                _ => propName,
+                            };
+
+                            var displayValue =
+                                propName == "Sha" && prop.value.Length > 8 ? prop.value.Substring(0, 8) : prop.value;
+
+                            versionTable.AddRow($"[white]  {displayName}[/]", $"[cyan]{displayValue}[/]");
+                        }
+                    }
+
+                    // Add any remaining properties not in the important list
+                    var remainingProps = gitVersionInfo
+                        .Where(p => !importantProps.Contains(p.key, StringComparer.OrdinalIgnoreCase))
+                        .Take(5);
+                    foreach (var (key, value) in remainingProps)
+                    {
+                        var displayValue =
+                            key.ToLower().Contains("sha") && value.Length > 8 ? value.Substring(0, 8) : value;
+                        versionTable.AddRow($"[white]  {key}[/]", $"[dim cyan]{displayValue}[/]");
+                    }
+                }
+                else
+                {
+                    versionTable.AddRow("[white]  GitVersion Properties[/]", "[yellow]None accessible[/]");
+                }
+            }
+            else
+            {
+                versionTable.AddRow("[white]  GitVersion[/]", "[yellow]Not available[/]");
+            }
+
+            AnsiConsole.Write(
+                new Panel(versionTable).Header("[blue]📦 Version Information[/]", Justify.Left).Collapse()
+            );
+            AnsiConsole.WriteLine();
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine($"[red]❌ Error retrieving version information: {ex.Message}[/]");
+            AnsiConsole.WriteLine();
+        }
     }
 
     private static void DisplayEnvironmentVariables()
