@@ -18,8 +18,8 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        // Parse command-line arguments for save operations
-        var saveOperations = ParseCommandLineArguments(args);
+        // Parse command-line arguments for save operations and flags
+        var (saveOperations, showEnvVars) = ParseCommandLineArguments(args);
 
         // Register the custom KnxAddress converter first
         RegisterCustomConverters();
@@ -46,17 +46,30 @@ internal class Program
 
         DisplayHeader();
         DisplayVersionInformation();
-        DisplayEnvironmentVariables();
+
+        // Only display environment variables if the flag is set
+        if (showEnvVars)
+        {
+            DisplayEnvironmentVariables();
+        }
+
         DisplayConfiguration(config);
         DisplayFooter();
 
         // Process save operations if any were specified
         ProcessSaveOperations(saveOperations, config, logger);
+
+        // Display command line options at the end
+        DisplayCommandLineOptions(args);
     }
 
-    private static List<(string operation, string filename)> ParseCommandLineArguments(string[] args)
+    private static (
+        List<(string operation, string filename)> saveOperations,
+        bool showEnvVars
+    ) ParseCommandLineArguments(string[] args)
     {
         var saveOperations = new List<(string operation, string filename)>();
+        var showEnvVars = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -70,9 +83,18 @@ internal class Program
                 saveOperations.Add(("save-defaults", args[i + 1]));
                 i++; // Skip the filename argument
             }
+            else if (args[i] == "--show-env-vars")
+            {
+                showEnvVars = true;
+            }
+            else if (args[i] == "--help" || args[i] == "-h")
+            {
+                DisplayHelp();
+                Environment.Exit(0);
+            }
         }
 
-        return saveOperations;
+        return (saveOperations, showEnvVars);
     }
 
     private static void ProcessSaveOperations(
@@ -565,5 +587,69 @@ internal class Program
         }
 
         return table;
+    }
+
+    private static void DisplayHelp()
+    {
+        AnsiConsole.Write(new FigletText("Snapdog Config").Color(Color.Green));
+        AnsiConsole.MarkupLine("[bold yellow]🐶 SNAPDOG Configuration Sample Application[/]");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]Usage:[/]");
+        AnsiConsole.MarkupLine("  [cyan]dotnet run[/] [[options]]");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]Options:[/]");
+        AnsiConsole.MarkupLine("  [cyan]--show-env-vars[/]          Show all SNAPDOG environment variables");
+        AnsiConsole.MarkupLine("  [cyan]--save <filename>[/]        Save current configuration to file");
+        AnsiConsole.MarkupLine("  [cyan]--save-defaults <filename>[/] Save default configuration template to file");
+        AnsiConsole.MarkupLine("  [cyan]--help, -h[/]              Show this help message");
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("[bold]Examples:[/]");
+        AnsiConsole.MarkupLine("  [dim]dotnet run --show-env-vars[/]");
+        AnsiConsole.MarkupLine("  [dim]dotnet run --save config.env --show-env-vars[/]");
+        AnsiConsole.MarkupLine("  [dim]dotnet run --save-defaults template.env[/]");
+        AnsiConsole.WriteLine();
+    }
+
+    private static void DisplayCommandLineOptions(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            AnsiConsole.WriteLine();
+            AnsiConsole.Write(new Rule("[grey]Command Line Info[/]").RuleStyle("grey"));
+            AnsiConsole.MarkupLine(
+                "[dim]No command line arguments provided. Use [cyan]--help[/] to see available options.[/]"
+            );
+            AnsiConsole.WriteLine();
+            return;
+        }
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(new Rule("[blue]Command Line Arguments[/]").RuleStyle("blue"));
+
+        var table = new Table().NoBorder();
+        table.AddColumn(new TableColumn("[grey]Argument[/]").LeftAligned());
+        table.AddColumn(new TableColumn("[grey]Description[/]").LeftAligned());
+
+        foreach (var arg in args)
+        {
+            var description = arg switch
+            {
+                "--show-env-vars" => "Display environment variables",
+                "--help" or "-h" => "Show help information",
+                var s when s.StartsWith("--save-defaults") => "Save default configuration template",
+                var s when s.StartsWith("--save") => "Save current configuration",
+                _ => arg.StartsWith("--") ? "Unknown option" : "Parameter/filename",
+            };
+
+            table.AddRow($"[cyan]{arg}[/]", $"[white]{description}[/]");
+        }
+
+        AnsiConsole.Write(
+            new Panel(table).Header("[blue]📋 Executed with these arguments[/]", Justify.Left).Collapse()
+        );
+        AnsiConsole.WriteLine();
     }
 }
