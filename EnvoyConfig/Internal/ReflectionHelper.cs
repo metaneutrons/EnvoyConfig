@@ -771,7 +771,7 @@ public static class ReflectionHelper
         string? value;
         if (useDefaults)
         {
-            value = attr.Default?.ToString() ?? "";
+            value = ConvertFromType(attr.Default, prop.PropertyType) ?? "";
         }
         else
         {
