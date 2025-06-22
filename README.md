@@ -39,15 +39,37 @@ dotnet add package EnvoyConfig.Adapters.Microsoft  # For Microsoft.Extensions.Lo
 ## 🚀 Quick Start
 
 ```csharp
-public class MyConfig {
-    [Env(Key = "PORT", Default = "8080")]  // for env var MYAPP_PORT
-    public int Port { get; set; }
+public class ApiKeyConfig
+{
+    [Env(Key = "PRIMARY")]         // Maps to: MYAPP_API_PRIMARY
+    public string Primary { get; set; } = "";
 
-    [Env(Key = "FEATURES", IsList = true)] // for env var MYAPP_FEATURES
-    public List<string> Features { get; set; } = new();
+    [Env(Key = "SECONDARY")]       // Maps to: MYAPP_API_SECONDARY
+    public string Secondary { get; set; } = "";
+
+    [Env(Key = "ENABLED", Default = true)]  // Maps to: MYAPP_API_ENABLED
+    public bool Enabled { get; set; }
 }
 
+public class MyConfig
+{
+    [Env(Key = "PORT", Default = 8080)]    // Maps to: MYAPP_PORT
+    public int Port { get; set; }
+
+    [Env(Key = "FEATURES", IsList = true)] // Maps to: MYAPP_FEATURES (comma-separated)
+    public List<string> Features { get; set; } = new();
+
+    [Env(NestedPrefix = "API_")]           // Maps to: MYAPP_API_* (nested object)
+    public ApiKeyConfig ApiKeys { get; set; } = new();
+
+    [Env(ListPrefix = "SERVER_")]          // Maps to: MYAPP_SERVER_1, MYAPP_SERVER_2, etc.
+    public List<string> Servers { get; set; } = new();
+}
+
+// Set global prefix for all environment variables
 EnvConfig.GlobalPrefix = "MYAPP_";
+
+// Load configuration from environment variables
 var config = EnvConfig.Load<MyConfig>();
 
 // Save current configuration to .env file
@@ -55,6 +77,18 @@ EnvConfig.Save(config, "current-config.env");
 
 // Save defaults template to .env file
 EnvConfig.SaveDefaults<MyConfig>("template.env");
+```
+
+**Example Environment Variables:**
+
+```bash
+MYAPP_PORT=3000
+MYAPP_FEATURES=auth,logging,metrics
+MYAPP_API_PRIMARY=key123abc
+MYAPP_API_SECONDARY=key456def
+MYAPP_API_ENABLED=true
+MYAPP_SERVER_1=api.example.com
+MYAPP_SERVER_2=backup.example.com
 ```
 
 ## 🔧 Advanced Usage & Features
