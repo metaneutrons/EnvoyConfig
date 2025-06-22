@@ -6,6 +6,7 @@ namespace EnvoyConfig.Tests;
 using System;
 using System.Threading.Tasks;
 
+[Collection("NonParallel")]
 public class Concurrency
 {
     public class ConcurrencyConfig

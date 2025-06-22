@@ -112,6 +112,7 @@ namespace EnvoyConfig.Tests
     }
 
     // 4. Test Class
+    [Collection("EnvoyConfig")]
     public class CustomConverterFeature : IDisposable
     {
         private readonly TestLogSink _testLogger;
@@ -120,6 +121,9 @@ namespace EnvoyConfig.Tests
         {
             EnvConfig.ThrowOnConversionError = false;
             _testLogger = new TestLogSink();
+
+            // Clear any existing converters to ensure clean state
+            TypeConverterRegistry.Clear();
 
             // Attempt to ensure a "clean slate" for CustomPoint converters before each test.
             // This registers a converter that will always return null for CustomPoint,
@@ -131,39 +135,53 @@ namespace EnvoyConfig.Tests
         [Fact]
         public void CustomConverter_Registered_ConvertsSuccessfully()
         {
-            // Arrange
-            TypeConverterRegistry.RegisterConverter(typeof(CustomPoint), new CustomPointConverter());
-            Environment.SetEnvironmentVariable("CUSTOM_POINT_VAR", "10,20");
+            try
+            {
+                // Arrange
+                TypeConverterRegistry.RegisterConverter(typeof(CustomPoint), new CustomPointConverter());
+                Environment.SetEnvironmentVariable("CUSTOM_POINT_VAR", "10,20");
 
-            // Act
-            var config = EnvConfig.Load<ConfigWithCustomType>(_testLogger);
+                // Act
+                var config = EnvConfig.Load<ConfigWithCustomType>(_testLogger);
 
-            // Assert
-            Assert.NotNull(config.MyCustomPoint);
-            Assert.Equal(10, config.MyCustomPoint.X);
-            Assert.Equal(20, config.MyCustomPoint.Y);
-            // CustomPointConverter does not log on success
-            Assert.Empty(_testLogger.Messages);
+                // Assert
+                Assert.NotNull(config.MyCustomPoint);
+                Assert.Equal(10, config.MyCustomPoint.X);
+                Assert.Equal(20, config.MyCustomPoint.Y);
+                // CustomPointConverter does not log on success
+                Assert.Empty(_testLogger.Messages);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("CUSTOM_POINT_VAR", null);
+            }
         }
 
         [Fact]
         public void CustomConverter_Registered_HandlesInvalidFormatInputGracefully()
         {
-            // Arrange
-            TypeConverterRegistry.RegisterConverter(typeof(CustomPoint), new CustomPointConverter());
-            Environment.SetEnvironmentVariable("CUSTOM_POINT_VAR", "foo,bar,baz"); // Invalid format
+            try
+            {
+                // Arrange
+                TypeConverterRegistry.RegisterConverter(typeof(CustomPoint), new CustomPointConverter());
+                Environment.SetEnvironmentVariable("CUSTOM_POINT_VAR", "foo,bar,baz"); // Invalid format
 
-            // Act
-            var config = EnvConfig.Load<ConfigWithCustomType>(_testLogger);
+                // Act
+                var config = EnvConfig.Load<ConfigWithCustomType>(_testLogger);
 
-            // Assert
-            Assert.Null(config.MyCustomPoint); // Converter returns null on error
-            Assert.Contains(
-                _testLogger.Messages,
-                msg =>
-                    msg.Level == EnvLogLevel.Error
-                    && msg.Message.StartsWith("CustomPointConverter: Invalid input string format")
-            );
+                // Assert
+                Assert.Null(config.MyCustomPoint); // Converter returns null on error
+                Assert.Contains(
+                    _testLogger.Messages,
+                    msg =>
+                        msg.Level == EnvLogLevel.Error
+                        && msg.Message.StartsWith("CustomPointConverter: Invalid input string format")
+                );
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("CUSTOM_POINT_VAR", null);
+            }
         }
 
         [Fact]

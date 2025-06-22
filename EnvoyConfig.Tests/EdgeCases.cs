@@ -5,6 +5,7 @@ namespace EnvoyConfig.Tests;
 
 using System;
 
+[Collection("EnvoyConfig")]
 public class EdgeCases
 {
     public class EdgeConfig
@@ -39,6 +40,7 @@ public class StandardTypesConfig
     public Guid MyGuid { get; set; }
 }
 
+[Collection("EnvoyConfig")]
 public class StandardTypeConversionTests
 {
     public StandardTypeConversionTests()
@@ -84,10 +86,17 @@ public class StandardTypeConversionTests
     [Fact]
     public void TimeSpan_Valid_DaysHoursMinutesSeconds()
     {
-        var expectedTimeSpan = new TimeSpan(2, 14, 30, 0); // 2d 14h 30m
-        Environment.SetEnvironmentVariable("TEST_TIMESPAN", expectedTimeSpan.ToString("g")); // "d.hh:mm:ss"
-        var config = EnvConfig.Load<StandardTypesConfig>();
-        Assert.Equal(expectedTimeSpan, config.MyTimeSpan);
+        try
+        {
+            var expectedTimeSpan = new TimeSpan(2, 14, 30, 0); // 2d 14h 30m
+            Environment.SetEnvironmentVariable("TEST_TIMESPAN", expectedTimeSpan.ToString("g")); // "d.hh:mm:ss"
+            var config = EnvConfig.Load<StandardTypesConfig>();
+            Assert.Equal(expectedTimeSpan, config.MyTimeSpan);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TEST_TIMESPAN", null);
+        }
     }
 
     [Fact]

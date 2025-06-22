@@ -5,6 +5,7 @@ namespace EnvoyConfig.Tests;
 
 using System;
 
+[Collection("EnvoyConfig")]
 public class Dictionary
 {
     public class DictConfig

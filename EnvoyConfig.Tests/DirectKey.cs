@@ -5,6 +5,7 @@ namespace EnvoyConfig.Tests;
 
 using System;
 
+[Collection("NonParallel")]
 public class DirectKey
 {
     public class DirectKeyConfig

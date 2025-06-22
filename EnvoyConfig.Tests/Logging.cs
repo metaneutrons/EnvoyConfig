@@ -7,6 +7,7 @@ namespace EnvoyConfig.Tests;
 using System;
 using System.Collections.Generic;
 
+[Collection("NonParallel")]
 public class Logging
 {
     public class LogConfig
