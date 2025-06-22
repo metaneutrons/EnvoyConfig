@@ -19,32 +19,50 @@ internal class Program
     private static void Main(string[] args)
     {
         // Parse command-line arguments for save operations and flags
-        var (saveOperations, showEnvVars) = ParseCommandLineArguments(args);
+        var (saveOperations, showEnvVars, loadFromFile, globalPrefix) = ParseCommandLineArguments(args);
 
         // Register the custom KnxAddress converter first
         RegisterCustomConverters();
 
-        // Resolve absolute path to sample.env
-        var envPath = Path.Combine(AppContext.BaseDirectory, "sample.env");
-        if (!File.Exists(envPath))
+        // Determine which .env file to load
+        string envPath;
+        if (!string.IsNullOrEmpty(loadFromFile))
         {
-            // Try project dir relative to working dir
-            envPath = Path.GetFullPath("EnvoyConfig.Sample/sample.env", Environment.CurrentDirectory);
+            // Use the specified file from --load-from
+            envPath = Path.IsPathRooted(loadFromFile)
+                ? loadFromFile
+                : Path.GetFullPath(loadFromFile, Environment.CurrentDirectory);
+
+            if (!File.Exists(envPath))
+            {
+                AnsiConsole.MarkupLine($"[red]❌ Error: Specified .env file not found: {envPath}[/]");
+                Environment.Exit(1);
+            }
+        }
+        else
+        {
+            // Default behavior: look for sample.env
+            envPath = Path.Combine(AppContext.BaseDirectory, "sample.env");
+            if (!File.Exists(envPath))
+            {
+                // Try project dir relative to working dir
+                envPath = Path.GetFullPath("EnvoyConfig.Sample/sample.env", Environment.CurrentDirectory);
+            }
         }
 
         // Load .env file
         DotEnv.Load(options: new DotEnvOptions(envFilePaths: [envPath], overwriteExistingVars: true));
 
-        // Set global prefix
-        EnvConfig.GlobalPrefix = "SNAPDOG_";
+        // Set global prefix (use CLI parameter or default to MYAPP_)
+        EnvConfig.GlobalPrefix = globalPrefix ?? "MYAPP_";
 
         // Create logger for both config loading and save operations
         var logger = new SpectreConsoleLogSink();
 
-        // Load config using SampleConfig (which now includes SnapdogClients)
+        // Load config using SampleConfig
         var config = EnvConfig.Load<SampleConfig>(logger);
 
-        DisplayHeader();
+        DisplayHeader(Path.GetFileName(envPath));
         DisplayVersionInformation();
 
         // Only display environment variables if the flag is set
@@ -65,11 +83,15 @@ internal class Program
 
     private static (
         List<(string operation, string filename)> saveOperations,
-        bool showEnvVars
+        bool showEnvVars,
+        string? loadFromFile,
+        string? globalPrefix
     ) ParseCommandLineArguments(string[] args)
     {
         var saveOperations = new List<(string operation, string filename)>();
         var showEnvVars = false;
+        string? loadFromFile = null;
+        string? globalPrefix = null;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -83,6 +105,16 @@ internal class Program
                 saveOperations.Add(("save-defaults", args[i + 1]));
                 i++; // Skip the filename argument
             }
+            else if (args[i] == "--load-from" && i + 1 < args.Length)
+            {
+                loadFromFile = args[i + 1];
+                i++; // Skip the filename argument
+            }
+            else if (args[i] == "--global-prefix" && i + 1 < args.Length)
+            {
+                globalPrefix = args[i + 1];
+                i++; // Skip the prefix argument
+            }
             else if (args[i] == "--show-env-vars")
             {
                 showEnvVars = true;
@@ -94,7 +126,7 @@ internal class Program
             }
         }
 
-        return (saveOperations, showEnvVars);
+        return (saveOperations, showEnvVars, loadFromFile, globalPrefix);
     }
 
     private static void ProcessSaveOperations(
@@ -145,11 +177,11 @@ internal class Program
         TypeConverterRegistry.RegisterConverter(typeof(KnxAddress?), new KnxAddressConverter());
     }
 
-    private static void DisplayHeader()
+    private static void DisplayHeader(string? envFileName = null)
     {
         AnsiConsole.Write(new Align(new FigletText("Snapdog Config").Color(Color.Green), HorizontalAlignment.Left));
         AnsiConsole.MarkupLine($"[bold yellow]🐶 Welcome to the Snapdog Sample Application![/]");
-        AnsiConsole.MarkupLine($"[bold blue]Loaded configuration from:[/] [white]sample.env[/]");
+        AnsiConsole.MarkupLine($"[bold blue]Loaded configuration from:[/] [white]{envFileName ?? "sample.env"}[/]");
         AnsiConsole.WriteLine();
     }
 
@@ -330,11 +362,11 @@ internal class Program
     {
         AnsiConsole.Write(new Rule("[grey]--- ENVIRONMENT VARIABLES ---[/]").RuleStyle("grey"));
 
-        // Print all SNAPDOG_ env vars
+        // Print all MYAPP_ env vars
         var snapdogVars = Environment
             .GetEnvironmentVariables()
             .Cast<System.Collections.DictionaryEntry>()
-            .Where(e => e.Key is string k && k.StartsWith("SNAPDOG_"))
+            .Where(e => e.Key is string k && k.StartsWith("MYAPP_"))
             .Select(e => ($"{e.Key}", e.Value?.ToString() ?? "<null>"))
             .OrderBy(t => t.Item1)
             .ToArray();
@@ -350,7 +382,7 @@ internal class Program
             }
 
             AnsiConsole.Write(
-                new Panel(table).Header("[green]SNAPDOG_ Environment Variables[/]", Justify.Left).Collapse()
+                new Panel(table).Header("[green]MYAPP_ Environment Variables[/]", Justify.Left).Collapse()
             );
         }
         AnsiConsole.Write(new Rule("[grey]--- END ENVIRONMENT VARIABLES ---[/]").RuleStyle("grey"));
@@ -600,16 +632,35 @@ internal class Program
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[bold]Options:[/]");
-        AnsiConsole.MarkupLine("  [cyan]--show-env-vars[/]          Show all SNAPDOG environment variables");
+        AnsiConsole.MarkupLine("  [cyan]--load-from <filename>[/]   Load configuration from specified .env file");
+        AnsiConsole.MarkupLine(
+            "  [cyan]--global-prefix <prefix>[/] Set global environment variable prefix (default: MYAPP_)"
+        );
+        AnsiConsole.MarkupLine(
+            "  [cyan]--show-env-vars[/]          Show all environment variables with current prefix"
+        );
         AnsiConsole.MarkupLine("  [cyan]--save <filename>[/]        Save current configuration to file");
         AnsiConsole.MarkupLine("  [cyan]--save-defaults <filename>[/] Save default configuration template to file");
         AnsiConsole.MarkupLine("  [cyan]--help, -h[/]              Show this help message");
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[bold]Examples:[/]");
-        AnsiConsole.MarkupLine("  [dim]dotnet run --show-env-vars[/]");
-        AnsiConsole.MarkupLine("  [dim]dotnet run --save config.env --show-env-vars[/]");
-        AnsiConsole.MarkupLine("  [dim]dotnet run --save-defaults template.env[/]");
+        AnsiConsole.MarkupLine(
+            "  [dim]dotnet run[/]                                     [grey]# Load from sample.env with MYAPP_ prefix[/]"
+        );
+        AnsiConsole.MarkupLine(
+            "  [dim]dotnet run --load-from production.env[/]          [grey]# Load from custom file[/]"
+        );
+        AnsiConsole.MarkupLine(
+            "  [dim]dotnet run --global-prefix MYAPP_[/]              [grey]# Use MYAPP_ prefix instead[/]"
+        );
+        AnsiConsole.MarkupLine(
+            "  [dim]dotnet run --show-env-vars[/]                     [grey]# Show environment variables[/]"
+        );
+        AnsiConsole.MarkupLine(
+            "  [dim]dotnet run --save config.env --show-env-vars[/]   [grey]# Save config and show vars[/]"
+        );
+        AnsiConsole.MarkupLine("  [dim]dotnet run --save-defaults template.env[/]        [grey]# Generate template[/]");
         AnsiConsole.WriteLine();
     }
 
@@ -637,6 +688,8 @@ internal class Program
         {
             var description = arg switch
             {
+                "--load-from" => "Load configuration from custom .env file",
+                "--global-prefix" => "Set global environment variable prefix",
                 "--show-env-vars" => "Display environment variables",
                 "--help" or "-h" => "Show help information",
                 var s when s.StartsWith("--save-defaults") => "Save default configuration template",
