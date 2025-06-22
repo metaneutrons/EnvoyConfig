@@ -5,7 +5,7 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/metaneutrons/EnvoyConfig/actions)
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/download)
 [![NuGet](https://img.shields.io/nuget/v/EnvoyConfig)](https://www.nuget.org/packages/EnvoyConfig)
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![License: LGPL-3.0-or-later](https://img.shields.io/badge/license-LGPL--3.0--or--later-blue.svg)](LICENSE)
 [![GitHub Copilot](https://img.shields.io/badge/GitHub-Copilot-blue?logo=github)](https://github.com/features/copilot)
 [![Built with Claude](https://img.shields.io/badge/Built_with-Claude-8A2BE2)](https://claude.ai)
 [![Status: Pre-Release](https://img.shields.io/badge/Status-Beta-yellow)](https://github.com/metaneutrons/EnvoyConfig/releases)
@@ -181,4 +181,4 @@ Contributions are welcome! Please open issues or PRs for bugs, features, or ques
 
 ## 📜 License
 
-GPL-3.0-or-later. See [LICENSE](LICENSE).
+LGPL-3.0-or-later. See [LICENSE](LICENSE).
