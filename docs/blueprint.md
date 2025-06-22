@@ -3,7 +3,7 @@
 **Version:** 5.0
 **Date:** 2025-04-13
 **Author:** Fabian Schmieder
-**License:** GPL-3.0-or-later
+**License:** LGPL-3.0-or-later
 
 ## 0. Goals & Scope
 
@@ -313,7 +313,7 @@ This section details the purpose, key files, dependencies, and implementation no
     - Logging Integration: `IEnvLogSink`, setup example using an adapter.
 7. **Troubleshooting / FAQ:** Common issues (Type conversion errors, reflection exceptions, prefix confusion, logging setup).
 8. **Contributing:** Guidelines.
-9. **License:** GPL-3.0-or-later.
+9. **License:** LGPL-3.0-or-later.
 
 ### 6.2. XML Documentation Comments
 

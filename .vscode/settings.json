@@ -1,65 +1,65 @@
 {
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": "explicit",
-        "source.fixAll": "explicit"
-    },
-    "editor.rulers": [
-        120
-    ],
-    "files.trimTrailingWhitespace": true,
-    "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
-    // C# specific settings
-    "omnisharp.enableRoslynAnalyzers": true,
-    "omnisharp.enableEditorConfigSupport": true,
-    "omnisharp.useModernNet": true,
-    "csharp.format.enable": true,
-    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
-    // Hide bin and obj folders
-    "files.exclude": {
-        "**/bin": true,
-        "**/obj": true,
-        "**/.vs": true,
-        "**/.git": true,
-        "**/.DS_Store": true
-    },
-    // File associations
-    "files.associations": {
-        "*.props": "xml",
-        "*.targets": "xml",
-        "*.csproj": "xml",
-        "*.ruleset": "xml"
-    },
-    // Terminal settings
-    "terminal.integrated.defaultProfile.windows": "PowerShell",
-    "terminal.integrated.defaultProfile.osx": "zsh",
-    "terminal.integrated.defaultProfile.linux": "bash",
-    // Recommended extensions
-    "extensions.ignoreRecommendations": false,
-    // C# formatting settings
-    "csharp.suppressDotnetRestoreNotification": false,
-    "dotnet.server.useOmnisharp": true,
-    // Custom tasks
-    "task.quickOpen.history": 10,
-    "task.quickOpen.detail": true,
-    "task.saveBeforeRun": "always",
-    // Source generator debugging
-    "csharp.debug.sourceGenerators": true,
-    "cSpell.words": [
-        "buildtransitive",
-        "CLIST",
-        "contentfiles",
-        "dave",
-        "metaneutrons",
-        "NBOOL",
-        "netstandard",
-        "NLIST",
-        "Nums",
-        "roslyn",
-        "Schmieder",
-        "serilog",
-        "Serilog",
-        "TIMESPAN"
-    ]
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
+  },
+  "editor.rulers": [
+    120
+  ],
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  // C# specific settings
+  "omnisharp.enableRoslynAnalyzers": true,
+  "omnisharp.enableEditorConfigSupport": true,
+  "omnisharp.useModernNet": true,
+  "csharp.format.enable": true,
+  "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+  // Hide bin and obj folders
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.vs": true,
+    "**/.git": true,
+    "**/.DS_Store": true
+  },
+  // File associations
+  "files.associations": {
+    "*.props": "xml",
+    "*.targets": "xml",
+    "*.csproj": "xml",
+    "*.ruleset": "xml"
+  },
+  // Terminal settings
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.defaultProfile.linux": "bash",
+  // Recommended extensions
+  "extensions.ignoreRecommendations": false,
+  // C# formatting settings
+  "csharp.suppressDotnetRestoreNotification": false,
+  "dotnet.server.useOmnisharp": true,
+  // Custom tasks
+  "task.quickOpen.history": 10,
+  "task.quickOpen.detail": true,
+  "task.saveBeforeRun": "always",
+  // Source generator debugging
+  "csharp.debug.sourceGenerators": true,
+  "cSpell.words": [
+    "buildtransitive",
+    "CLIST",
+    "contentfiles",
+    "dave",
+    "metaneutrons",
+    "NBOOL",
+    "netstandard",
+    "NLIST",
+    "Nums",
+    "roslyn",
+    "Schmieder",
+    "serilog",
+    "Serilog",
+    "TIMESPAN"
+  ]
 }

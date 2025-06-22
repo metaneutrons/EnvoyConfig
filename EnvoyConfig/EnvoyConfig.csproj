@@ -11,10 +11,10 @@
     <PackageTags>configuration;environment;reflection;dotnet;envoy</PackageTags>
     <Authors>Fabian Schmieder</Authors>
     <Company>metaneutrons</Company>
-    <Copyright>GPL-3.0-or-later</Copyright>
-    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <Copyright>LGPL-3.0-or-later</Copyright>
+    <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-</PropertyGroup>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
