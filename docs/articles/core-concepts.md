@@ -4,6 +4,8 @@
 
 EnvoyConfig uses the `[Env]` attribute on properties within your configuration classes to determine how to map environment variables. The behavior is controlled by the attribute's parameters (`Name`, `DefaultValue`, `IsList`, `IsKeyValue`, `Prefix`).
 
+These strategies work bidirectionally - they can both load environment variables into configuration objects and save configuration objects back to `.env` files.
+
 Here are the five primary mapping strategies:
 
 | Strategy     | Description                                                                  | Attribute Usage Example                        | Environment Variable Example(s)             | Target Property Type         |

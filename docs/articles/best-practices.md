@@ -9,6 +9,15 @@
     * Create test-specific `.env` files and use `EnvConfig.UseDotEnv("path/to/test.env")` in your test setup.
     * Alternatively, directly set environment variables in your test runner's setup/teardown phases: `Environment.SetEnvironmentVariable("TEST_VAR", "value");` ... `Environment.SetEnvironmentVariable("TEST_VAR", null);`.
     * Verify that defaults are applied correctly and that missing required variables are handled (either by your validation or expected `null`/default values).
+7. **Use Save Functionality for Templates & Documentation:**
+    * Generate `.env.example` files using `EnvConfig.SaveDefaults<T>()` to provide clear examples of required environment variables.
+    * Use `EnvConfig.Save()` to export working configurations for backup, sharing between environments, or creating deployment templates.
+    * Regenerate example files when you add new configuration properties to keep documentation current.
+8. **Configuration Management Workflow:**
+    * **Development**: Use `.env` files for local development with `EnvConfig.UseDotEnv()`.
+    * **Testing**: Generate test configurations with `EnvConfig.SaveDefaults<T>()` and customize as needed.
+    * **Production**: Use actual environment variables (container orchestrators, CI/CD systems) but validate with saved templates.
+    * **Documentation**: Keep `.env.example` files updated using `SaveDefaults<T>()` for onboarding new developers.
 
 ## Contributing & Support (Optional)
 

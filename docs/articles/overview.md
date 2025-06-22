@@ -16,6 +16,7 @@
   * Libraries that shouldn't impose external configuration dependencies.
 * **Testability:** The library's static nature and reliance on standard POCOs make it straightforward to unit test your configuration loading logic. You can easily mock environment variables or use dedicated `.env` files during testing.
 * **Type Safety:** Binds environment variable strings to appropriate .NET types (integers, booleans, lists, dictionaries, etc.), catching potential errors early.
+* **Bidirectional Operations:** Not only load configuration from environment variables, but also save configuration objects back to `.env` files and generate template files with default values.
 
 ## When to Use EnvoyConfig (and When Not To)
 

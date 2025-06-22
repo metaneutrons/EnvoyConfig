@@ -95,3 +95,17 @@ Feature Flags:
  - DetailedLogging: false (Enabled: False)
  - UseBetaAPI: true (Enabled: True)
 ```
+
+## Saving Configuration
+
+You can also save configuration objects back to `.env` files:
+
+```csharp
+// Save current configuration values
+EnvConfig.Save(config, "backup.env");
+
+// Generate a template with default values
+EnvConfig.SaveDefaults<AppConfig>("template.env");
+```
+
+This is useful for creating configuration templates, backing up settings, or generating example files for new team members.
