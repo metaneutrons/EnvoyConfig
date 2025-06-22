@@ -21,6 +21,17 @@ public static class EnvConfig
     public static bool ThrowOnConversionError { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets the logger sink for EnvoyConfig internal logging.
+    /// </summary>
+    public static IEnvLogSink? Logger { get; set; }
+
+    /// <summary>
+    /// Gets or sets the minimum log level for EnvoyConfig internal logging.
+    /// Defaults to <c>Error</c>.
+    /// </summary>
+    public static EnvLogLevel LogLevel { get; set; } = EnvLogLevel.Error;
+
+    /// <summary>
     /// Loads configuration data from environment variables (and optionally a .env file specified by UseDotEnv)
     /// into a new instance of the specified configuration class <typeparamref name="T"/>.
     /// </summary>
@@ -46,7 +57,7 @@ public static class EnvConfig
     /// </code>
     /// </example>
     public static T Load<T>(IEnvLogSink? logger = null)
-        where T : new() => ReflectionHelper.PopulateInstance<T>(logger, GlobalPrefix);
+        where T : new() => ReflectionHelper.PopulateInstance<T>(logger ?? Logger, GlobalPrefix);
 
     /// <summary>
     /// Saves the current configuration values to a .env file.

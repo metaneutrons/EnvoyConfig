@@ -366,6 +366,7 @@ public static class ReflectionHelper
         }
         else
         {
+            // This handles both: env var found, or env var not found and no default
             return ConvertToType(str, prop.PropertyType, logger, envKey);
         }
     }

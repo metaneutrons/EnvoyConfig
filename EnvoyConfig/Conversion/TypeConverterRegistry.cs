@@ -17,8 +17,10 @@ namespace EnvoyConfig.Conversion
         /// <param name="converter">The converter instance.</param>
         public static void RegisterConverter(Type type, ITypeConverter converter)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            if (converter == null) throw new ArgumentNullException(nameof(converter));
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+            if (converter == null)
+                throw new ArgumentNullException(nameof(converter));
 
             _converters[type] = converter;
         }
@@ -31,9 +33,18 @@ namespace EnvoyConfig.Conversion
         /// <returns>True if a converter was found for the specified type; otherwise, false.</returns>
         public static bool TryGetConverter(Type type, out ITypeConverter? converter)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
 
             return _converters.TryGetValue(type, out converter);
+        }
+
+        /// <summary>
+        /// Clears all registered converters. This is primarily intended for testing purposes.
+        /// </summary>
+        public static void Clear()
+        {
+            _converters.Clear();
         }
     }
 }

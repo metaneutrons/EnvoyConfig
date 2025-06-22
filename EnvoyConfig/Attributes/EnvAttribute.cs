@@ -22,6 +22,18 @@ namespace EnvoyConfig.Attributes
         public object? Default { get; set; }
 
         /// <summary>
+        /// Gets or sets the default value to use if the environment variable
+        /// specified by <see cref="Key"/> is not found or is empty.
+        /// The value must be convertible to the target property's type.
+        /// This is an alias for <see cref="Default"/> to support the more conventional naming pattern.
+        /// </summary>
+        public object? DefaultValue
+        {
+            get => Default;
+            set => Default = value;
+        }
+
+        /// <summary>
         /// If true, parses the value as a list (comma-separated by default).
         /// </summary>
         public bool IsList { get; set; }
