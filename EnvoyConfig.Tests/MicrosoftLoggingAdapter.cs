@@ -6,7 +6,7 @@ namespace EnvoyConfig.Tests;
 using System;
 using System.Collections.Generic;
 
-public class MicrosoftLoggingAdapterTests
+public class MicrosoftLoggingAdapter
 {
     [Fact]
     public void Logs_Information_Message()

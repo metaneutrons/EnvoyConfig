@@ -5,7 +5,7 @@ using Xunit;
 
 namespace EnvoyConfig.Tests;
 
-public class NLogAdapterTests
+public class NLogAdapter
 {
     [Fact]
     public void Logs_Information_Message()

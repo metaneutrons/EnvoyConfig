@@ -10,9 +10,9 @@ namespace EnvoyConfig.Tests
     /// Tests for the SNAPDOG client configuration system.
     /// </summary>
     [Collection("NonParallel")]
-    public class SnapdogConfigTests
+    public class ComplexConfig
     {
-        public SnapdogConfigTests()
+        public ComplexConfig()
         {
             // Register the KnxAddress converter for tests
             TypeConverterRegistry.RegisterConverter(typeof(KnxAddress), new KnxAddressConverter());

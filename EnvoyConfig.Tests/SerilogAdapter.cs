@@ -7,7 +7,7 @@ namespace EnvoyConfig.Tests;
 
 using System.Collections.Generic;
 
-public class SerilogAdapterTests
+public class SerilogAdapter
 {
     [Fact]
     public void Logs_Information_Message()

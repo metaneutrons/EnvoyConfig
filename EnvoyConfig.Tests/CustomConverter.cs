@@ -112,11 +112,11 @@ namespace EnvoyConfig.Tests
     }
 
     // 4. Test Class
-    public class CustomConverterFeatureTests : IDisposable
+    public class CustomConverterFeature : IDisposable
     {
         private readonly TestLogSink _testLogger;
 
-        public CustomConverterFeatureTests()
+        public CustomConverterFeature()
         {
             EnvConfig.ThrowOnConversionError = false;
             _testLogger = new TestLogSink();

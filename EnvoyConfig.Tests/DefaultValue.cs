@@ -6,7 +6,7 @@ namespace EnvoyConfig.Tests
 {
     using System;
 
-    public class DefaultValueTests
+    public class DefaultValue
     {
         private class BoolConfig
         {

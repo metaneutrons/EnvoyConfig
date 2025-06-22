@@ -7,7 +7,7 @@ using Xunit;
 namespace EnvoyConfig.Tests
 {
     [Collection("NonParallel")]
-    public class SaveTests
+    public class Save
     {
         private class TestConfig
         {
@@ -56,7 +56,7 @@ namespace EnvoyConfig.Tests
 
         private readonly string _testDir = Path.Combine(Path.GetTempPath(), "EnvoyConfigTests");
 
-        public SaveTests()
+        public Save()
         {
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, true);
