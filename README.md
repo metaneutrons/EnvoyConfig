@@ -24,6 +24,10 @@
 - Thread-safe, high performance (caching)
 - Zero external dependencies in core
 
+## 📚 Documentation
+
+See here for [Documentation](https://metaneutrons.github.io/EnvoyConfig).
+
 ## 📦 Installation
 
 ```bash
@@ -104,10 +108,6 @@ MYAPP_SERVER_2=backup.example.com
 - **Logging:** Pass a custom logger (`IEnvLogSink`) or use an adapter for your framework.
 - **Custom Type Converters:** Implement `ITypeConverter` and register with `TypeConverterRegistry.RegisterConverter()` to handle custom string-to-type conversions.
 - **Error Handling:** Configure `EnvConfig.ThrowOnConversionError` (default `false`) to control behavior when type conversion fails. If `true`, exceptions are thrown; otherwise, errors are logged and default values are used.
-
-## 📚 Documentation
-
-See here for [Documentation](https://metaneutrons.github.io/EnvoyConfig).
 
 ## 🔧 Advanced Usage & Features (Continued)
 
