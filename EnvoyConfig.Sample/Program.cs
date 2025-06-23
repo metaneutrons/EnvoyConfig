@@ -628,7 +628,35 @@ internal class Program
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[bold]Usage:[/]");
-        AnsiConsole.MarkupLine("  [cyan]dotnet run[/] [[options]]");
+
+        // Determine if running from dotnet run or compiled executable
+        // Check if we're running via 'dotnet run' by looking at the command line args
+        var commandLineArgs = Environment.GetCommandLineArgs();
+        var commandLine = Environment.CommandLine;
+        // Detect if we're running via dotnet run by checking if we're in a development build
+        // or if the assembly is in a bin/Debug or bin/Release folder (typical for dotnet run)
+        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+        var isInBinFolder =
+            assemblyLocation.Contains("/bin/Debug/")
+            || assemblyLocation.Contains("/bin/Release/")
+            || assemblyLocation.Contains("\\bin\\Debug\\")
+            || assemblyLocation.Contains("\\bin\\Release\\");
+
+        // Also check if the first argument is a .dll file (indicates running via dotnet)
+        var firstArgIsDll =
+            commandLineArgs.Length > 0 && commandLineArgs[0].EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
+
+        var isDotnetRun = isInBinFolder && firstArgIsDll;
+
+        if (isDotnetRun)
+        {
+            AnsiConsole.MarkupLine("  [cyan]dotnet run --[/] [[options]]");
+        }
+        else
+        {
+            var exeName = Path.GetFileNameWithoutExtension(Environment.ProcessPath ?? "EnvoyConfig.Sample");
+            AnsiConsole.MarkupLine($"  [cyan]{exeName}[/] [[options]]");
+        }
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[bold]Options:[/]");
@@ -645,22 +673,50 @@ internal class Program
         AnsiConsole.WriteLine();
 
         AnsiConsole.MarkupLine("[bold]Examples:[/]");
-        AnsiConsole.MarkupLine(
-            "  [dim]dotnet run[/]                                     [grey]# Load from sample.env with MYAPP_ prefix[/]"
-        );
-        AnsiConsole.MarkupLine(
-            "  [dim]dotnet run --load-from production.env[/]          [grey]# Load from custom file[/]"
-        );
-        AnsiConsole.MarkupLine(
-            "  [dim]dotnet run --global-prefix MYAPP_[/]              [grey]# Use MYAPP_ prefix instead[/]"
-        );
-        AnsiConsole.MarkupLine(
-            "  [dim]dotnet run --show-env-vars[/]                     [grey]# Show environment variables[/]"
-        );
-        AnsiConsole.MarkupLine(
-            "  [dim]dotnet run --save config.env --show-env-vars[/]   [grey]# Save config and show vars[/]"
-        );
-        AnsiConsole.MarkupLine("  [dim]dotnet run --save-defaults template.env[/]        [grey]# Generate template[/]");
+
+        if (!isDotnetRun)
+        {
+            var exeName = Path.GetFileNameWithoutExtension(Environment.ProcessPath ?? "EnvoyConfig.Sample");
+            AnsiConsole.MarkupLine(
+                $"  [dim]{exeName}[/]                                     [grey]# Load from sample.env with MYAPP_ prefix[/]"
+            );
+            AnsiConsole.MarkupLine(
+                $"  [dim]{exeName} --load-from production.env[/]          [grey]# Load from custom file[/]"
+            );
+            AnsiConsole.MarkupLine(
+                $"  [dim]{exeName} --global-prefix MYAPP_[/]              [grey]# Use MYAPP_ prefix instead[/]"
+            );
+            AnsiConsole.MarkupLine(
+                $"  [dim]{exeName} --show-env-vars[/]                     [grey]# Show environment variables[/]"
+            );
+            AnsiConsole.MarkupLine(
+                $"  [dim]{exeName} --save config.env --show-env-vars[/]   [grey]# Save config and show vars[/]"
+            );
+            AnsiConsole.MarkupLine(
+                $"  [dim]{exeName} --save-defaults template.env[/]        [grey]# Generate template[/]"
+            );
+        }
+        else
+        {
+            AnsiConsole.MarkupLine(
+                "  [dim]dotnet run[/]                                        [grey]# Load from sample.env with MYAPP_ prefix[/]"
+            );
+            AnsiConsole.MarkupLine(
+                "  [dim]dotnet run -- --load-from production.env[/]         [grey]# Load from custom file[/]"
+            );
+            AnsiConsole.MarkupLine(
+                "  [dim]dotnet run -- --global-prefix MYAPP_[/]             [grey]# Use MYAPP_ prefix instead[/]"
+            );
+            AnsiConsole.MarkupLine(
+                "  [dim]dotnet run -- --show-env-vars[/]                    [grey]# Show environment variables[/]"
+            );
+            AnsiConsole.MarkupLine(
+                "  [dim]dotnet run -- --save config.env --show-env-vars[/]  [grey]# Save config and show vars[/]"
+            );
+            AnsiConsole.MarkupLine(
+                "  [dim]dotnet run -- --save-defaults template.env[/]       [grey]# Generate template[/]"
+            );
+        }
         AnsiConsole.WriteLine();
     }
 
