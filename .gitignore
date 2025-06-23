@@ -1,15 +1,16 @@
 # Build results
 [Bb]in/
 [Oo]bj/
+[Bb]uild/
 [Dd]ebug/
 [Rr]elease/
+[Pp]ublish/
 x64/
 x86/
 [Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]uild/
 msbuild.log
 msbuild.err
 msbuild.wrn
