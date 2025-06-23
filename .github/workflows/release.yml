@@ -58,22 +58,47 @@ jobs:
               ;;
           esac
 
+      - name: Debug git and environment info
+        run: |
+          echo "🔍 Git and Environment Debug Information:"
+          echo "  Current git branch: $(git branch --show-current)"
+          echo "  Git HEAD: $(git rev-parse HEAD)"
+          echo "  Git status: $(git status --porcelain)"
+          echo "  GITHUB_REF: ${{ github.ref }}"
+          echo "  GITHUB_HEAD_REF: ${{ github.head_ref }}"
+          echo "  GITHUB_REF_NAME: ${{ github.ref_name }}"
+          echo "  Selected branch input: ${{ github.event.inputs.branch }}"
+          echo "  Computed branch: ${{ github.event.inputs.branch || github.head_ref || github.ref_name }}"
+          echo "  Git remote branches:"
+          git branch -r
+          echo ""
+
+      - name: Force checkout to correct branch
+        run: |
+          TARGET_BRANCH="${{ github.event.inputs.branch || github.head_ref || github.ref_name }}"
+          echo "🔧 Ensuring we're on the correct branch: $TARGET_BRANCH"
+          git checkout "$TARGET_BRANCH"
+          git branch --show-current
+          echo "Current HEAD: $(git rev-parse HEAD)"
+
       - name: Determine version
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0.10.2
         with:
           useConfigFile: true
           updateAssemblyInfo: true
+          configFilePath: GitVersion.yml
         env:
-          # Override GitHub's branch detection to use the actual selected branch
-          GITHUB_REF: refs/heads/${{ github.event.inputs.branch || github.head_ref || github.ref_name }}
+          # Set GitVersion to use the current checked out branch
+          GITVERSION_OVERRIDE_BRANCH: ${{ github.event.inputs.branch || github.head_ref || github.ref_name }}
 
       - name: Display version information
         run: |
           SELECTED_BRANCH="${{ github.event.inputs.branch || github.head_ref || github.ref_name }}"
           echo "📋 Branch Information:"
           echo "  Selected branch: $SELECTED_BRANCH"
-          echo "  GITHUB_REF override: refs/heads/$SELECTED_BRANCH"
+          echo "  Current git branch: $(git branch --show-current)"
+          echo "  Git HEAD ref: $(git symbolic-ref HEAD 2>/dev/null || echo 'detached HEAD')"
           echo ""
           echo "📋 GitVersion Results:"
           echo "  SemVer: ${{ steps.gitversion.outputs.semVer }}"
@@ -81,12 +106,28 @@ jobs:
           echo "  NuGetVersion: ${{ steps.gitversion.outputs.nuGetVersion }}"
           echo "  BranchName: ${{ steps.gitversion.outputs.branchName }}"
           echo "  PreReleaseTag: '${{ steps.gitversion.outputs.preReleaseTag }}'"
+          echo "  PreReleaseLabel: '${{ steps.gitversion.outputs.preReleaseLabel }}'"
           echo "  IsPreRelease: ${{ steps.gitversion.outputs.preReleaseTag != '' }}"
+          echo "  CommitsSinceVersionSource: ${{ steps.gitversion.outputs.commitsSinceVersionSource }}"
+          echo "  VersionSourceSha: ${{ steps.gitversion.outputs.versionSourceSha }}"
           echo ""
-          echo "🔍 Branch Detection Check:"
-          echo "  GitVersion sees branch as: ${{ steps.gitversion.outputs.branchName }}"
-          echo "  Should match selected: $SELECTED_BRANCH"
-          echo "  Match status: ${{ steps.gitversion.outputs.branchName == (github.event.inputs.branch || github.head_ref || github.ref_name) && 'CORRECT' || 'MISMATCH' }}"
+          echo "🔍 Branch Detection Validation:"
+          echo "  GitVersion detected branch: ${{ steps.gitversion.outputs.branchName }}"
+          echo "  Expected branch: $SELECTED_BRANCH"
+          echo "  Match status: ${{ steps.gitversion.outputs.branchName == (github.event.inputs.branch || github.head_ref || github.ref_name) && '✅ CORRECT' || '❌ MISMATCH' }}"
+          echo ""
+          echo "🧪 Expected Version Behavior:"
+          if [[ "$SELECTED_BRANCH" == "main" ]]; then
+            echo "  Expected for main: Stable release (no pre-release suffix)"
+            echo "  Expected format: v0.1.X"
+          elif [[ "$SELECTED_BRANCH" == "develop" ]]; then
+            echo "  Expected for develop: Beta pre-release"
+            echo "  Expected format: v0.1.X-beta.Y"
+          else
+            echo "  Expected for $SELECTED_BRANCH: Custom branch behavior"
+          fi
+          echo ""
+          echo "✅ Actual Version Generated: ${{ steps.gitversion.outputs.fullSemVer }}"
 
       - name: Validate manual tag and compare with GitVersion
         id: validate_tag
