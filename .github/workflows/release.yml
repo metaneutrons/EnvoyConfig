@@ -77,9 +77,38 @@ jobs:
         run: |
           TARGET_BRANCH="${{ github.event.inputs.branch }}"
           echo "🔧 Ensuring we're on the correct branch: $TARGET_BRANCH"
-          git checkout "$TARGET_BRANCH"
-          git branch --show-current
-          echo "Current HEAD: $(git rev-parse HEAD)"
+
+          # First, make sure we have the latest refs
+          git fetch origin
+
+          # Check if branch exists locally, if not create it from origin
+          if ! git show-ref --verify --quiet refs/heads/$TARGET_BRANCH; then
+            echo "Creating local branch $TARGET_BRANCH from origin/$TARGET_BRANCH"
+            git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+          else
+            echo "Checking out existing local branch $TARGET_BRANCH"
+            git checkout "$TARGET_BRANCH"
+            # Make sure it's up to date with origin
+            git reset --hard "origin/$TARGET_BRANCH"
+          fi
+
+          echo "✅ Current branch: $(git branch --show-current)"
+          echo "✅ Current HEAD: $(git rev-parse HEAD)"
+          echo "✅ Origin HEAD for $TARGET_BRANCH: $(git rev-parse origin/$TARGET_BRANCH)"
+
+      - name: Prepare GitVersion environment
+        run: |
+          TARGET_BRANCH="${{ github.event.inputs.branch }}"
+          echo "🔧 Preparing GitVersion for branch: $TARGET_BRANCH"
+
+          # Ensure we're definitely on the target branch for GitVersion
+          CURRENT_BRANCH=$(git branch --show-current)
+          if [[ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]]; then
+            echo "❌ Branch mismatch! Current: $CURRENT_BRANCH, Expected: $TARGET_BRANCH"
+            exit 1
+          fi
+
+          echo "✅ Confirmed on correct branch: $CURRENT_BRANCH"
 
       - name: Determine version
         id: gitversion
@@ -88,6 +117,7 @@ jobs:
           useConfigFile: true
           updateAssemblyInfo: true
           configFilePath: GitVersion.yml
+          additionalArguments: "/overrideconfig mode=ContinuousDeployment /b ${{ github.event.inputs.branch }}"
         env:
           # Set GitVersion to use the current checked out branch
           GITVERSION_OVERRIDE_BRANCH: ${{ github.event.inputs.branch }}
