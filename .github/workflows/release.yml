@@ -110,6 +110,23 @@ jobs:
 
           echo "✅ Confirmed on correct branch: $CURRENT_BRANCH"
 
+      - name: Create git tag if manual tag provided
+        if: github.event.inputs.tag != ''
+        run: |
+          MANUAL_TAG="${{ github.event.inputs.tag }}"
+          echo "🏷️ Creating git tag: $MANUAL_TAG"
+
+          # Configure git user for tagging
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create the tag at current HEAD
+          git tag -a "$MANUAL_TAG" -m "Release $MANUAL_TAG"
+
+          echo "✅ Created git tag: $MANUAL_TAG"
+          echo "🔍 Tag details:"
+          git show --no-patch --format="  Hash: %H%n  Date: %cd%n  Message: %s" "$MANUAL_TAG"
+
       - name: Determine version
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0.10.2
@@ -250,8 +267,40 @@ jobs:
       - name: Build Release
         run: dotnet build --configuration Release --no-restore
 
+      - name: Debug version information before pack
+        run: |
+          echo "🔍 Debugging version information before pack:"
+          echo "  Manual tag input: '${{ github.event.inputs.tag }}'"
+          echo "  Computed tag: '${{ steps.release_info.outputs.tag }}'"
+          echo "  Computed version: '${{ steps.release_info.outputs.version }}'"
+          echo "  GitVersion SemVer: '${{ steps.gitversion.outputs.semVer }}'"
+          echo "  GitVersion FullSemVer: '${{ steps.gitversion.outputs.fullSemVer }}'"
+          echo "  GitVersion NuGetVersion: '${{ steps.gitversion.outputs.nuGetVersion }}'"
+          echo "  GitVersion AssemblySemVer: '${{ steps.gitversion.outputs.assemblySemVer }}'"
+          echo ""
+          echo "🔍 Environment variables that might affect pack:"
+          env | grep -i version || echo "No version-related environment variables found"
+          echo ""
+          echo "🔍 Checking project files for hardcoded versions:"
+          find . -name "*.csproj" -exec echo "=== {} ===" \; -exec grep -i version {} \; || echo "No version properties found in .csproj files"
+
       - name: Pack NuGet package
-        run: dotnet pack --configuration Release --no-build -o ./artifacts
+        run: |
+          echo "📦 Packing NuGet packages (GitVersion will provide version)..."
+
+          dotnet pack --configuration Release --no-build -o ./artifacts
+
+          echo ""
+          echo "🔍 Generated packages:"
+          ls -la ./artifacts/
+
+          echo ""
+          echo "📋 Package versions generated:"
+          for pkg in ./artifacts/*.nupkg; do
+            if [[ -f "$pkg" ]]; then
+              basename "$pkg"
+            fi
+          done
 
       - name: Determine release type and tag
         id: release_info
@@ -261,18 +310,23 @@ jobs:
           # Use manual tag if provided, otherwise use GitVersion output
           if [ -n "${{ github.event.inputs.tag }}" ]; then
             TAG="${{ github.event.inputs.tag }}"
-            echo "Using manual tag: $TAG"
+            # Remove 'v' prefix for version number
+            VERSION=${TAG#v}
+            echo "Using manual tag: $TAG (version: $VERSION)"
           elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             TAG="${{ github.ref_name }}"
-            echo "Using existing git tag: $TAG"
+            VERSION=${TAG#v}
+            echo "Using existing git tag: $TAG (version: $VERSION)"
           else
             # Use appropriate GitVersion output based on branch
             if [[ "$BRANCH" == "main" ]]; then
               TAG="v${{ steps.gitversion.outputs.semVer }}"
-              echo "Main branch - using SemVer: $TAG"
+              VERSION="${{ steps.gitversion.outputs.semVer }}"
+              echo "Main branch - using SemVer: $TAG (version: $VERSION)"
             else
               TAG="v${{ steps.gitversion.outputs.fullSemVer }}"
-              echo "Non-main branch - using FullSemVer: $TAG"
+              VERSION="${{ steps.gitversion.outputs.fullSemVer }}"
+              echo "Non-main branch - using FullSemVer: $TAG (version: $VERSION)"
             fi
           fi
 
@@ -288,6 +342,13 @@ jobs:
           fi
 
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          echo "🔍 Debug - Final version values:"
+          echo "  TAG: $TAG"
+          echo "  VERSION: $VERSION"
+          echo "  GitVersion SemVer: ${{ steps.gitversion.outputs.semVer }}"
+          echo "  GitVersion FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
