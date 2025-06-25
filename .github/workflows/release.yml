@@ -166,10 +166,13 @@ jobs:
           echo "🧪 Expected Version Behavior:"
           if [[ "$SELECTED_BRANCH" == "main" ]]; then
             echo "  Expected for main: Stable release (no pre-release suffix)"
-            echo "  Expected format: v0.1.X"
+            echo "  Expected format: X.Y.Z (e.g., 1.0.0, 2.3.4)"
           elif [[ "$SELECTED_BRANCH" == "develop" ]]; then
             echo "  Expected for develop: Beta pre-release"
-            echo "  Expected format: v0.1.X-beta.Y"
+            echo "  Expected format: X.Y.Z-beta.N (e.g., 1.0.0-beta.1)"
+          elif [[ "$SELECTED_BRANCH" =~ ^(fix|feat)/ ]]; then
+            echo "  Expected for $SELECTED_BRANCH: Alpha pre-release"
+            echo "  Expected format: X.Y.Z-alpha.N (e.g., 1.0.0-alpha.1)"
           else
             echo "  Expected for $SELECTED_BRANCH: Custom branch behavior"
           fi
@@ -180,40 +183,54 @@ jobs:
         run: |
           SELECTED_BRANCH="${{ github.event.inputs.branch }}"
           GENERATED_VERSION="${{ steps.gitversion.outputs.fullSemVer }}"
+          MANUAL_TAG="${{ github.event.inputs.tag }}"
 
           echo "🔍 Validating version format for branch: $SELECTED_BRANCH"
           echo "Generated version: $GENERATED_VERSION"
+          echo "Manual tag: ${MANUAL_TAG:-'(none)'}"
+
+          # Validate SemVer format
+          SEMVER_REGEX="^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$"
+
+          if [[ ! "$GENERATED_VERSION" =~ $SEMVER_REGEX ]]; then
+            echo "❌ ERROR: Generated version is not valid SemVer format"
+            echo "Actual: $GENERATED_VERSION"
+            exit 1
+          fi
 
           if [[ "$SELECTED_BRANCH" == "main" ]]; then
-            # For main branch: expect stable release (no pre-release suffix) with format v0.1.X
+            # For main branch: expect stable release (no pre-release suffix)
             if [[ "$GENERATED_VERSION" == *"-"* ]]; then
               echo "❌ ERROR: Main branch should generate stable release without pre-release suffix"
-              echo "Expected: v0.1.X (stable release)"
+              echo "Expected: Any stable SemVer (e.g., 1.0.0, 2.3.4)"
               echo "Actual: $GENERATED_VERSION (contains pre-release suffix)"
               exit 1
             fi
+            echo "✅ Version validation passed for main branch - stable SemVer: $GENERATED_VERSION"
 
-            # Check if version follows v0.1.X pattern
-            if [[ ! "$GENERATED_VERSION" =~ ^0\.1\.[0-9]+$ ]]; then
-              echo "❌ ERROR: Main branch version doesn't match expected format"
-              echo "Expected format: v0.1.X"
-              echo "Actual: $GENERATED_VERSION"
-              exit 1
-            fi
-
-            echo "✅ Version validation passed for main branch"
           elif [[ "$SELECTED_BRANCH" == "develop" ]]; then
-            # For develop branch: expect beta pre-release with format v0.1.X-beta.Y
-            if [[ ! "$GENERATED_VERSION" =~ ^0\.1\.[0-9]+-beta\.[0-9]+$ ]]; then
-              echo "❌ ERROR: Develop branch version doesn't match expected format"
-              echo "Expected format: v0.1.X-beta.Y"
+            # For develop branch: expect beta pre-release
+            if [[ ! "$GENERATED_VERSION" == *"-beta."* ]]; then
+              echo "❌ ERROR: Develop branch should generate beta pre-release"
+              echo "Expected: SemVer with beta label (e.g., 1.0.0-beta.1)"
               echo "Actual: $GENERATED_VERSION"
               exit 1
             fi
+            echo "✅ Version validation passed for develop branch - beta pre-release: $GENERATED_VERSION"
 
-            echo "✅ Version validation passed for develop branch"
+          elif [[ "$SELECTED_BRANCH" =~ ^(fix|feat)/ ]]; then
+            # For fix/* and feat/* branches: expect alpha pre-release
+            if [[ ! "$GENERATED_VERSION" == *"-alpha."* ]]; then
+              echo "❌ ERROR: Fix/Feature branches should generate alpha pre-release"
+              echo "Expected: SemVer with alpha label (e.g., 1.0.0-alpha.1)"
+              echo "Actual: $GENERATED_VERSION"
+              exit 1
+            fi
+            echo "✅ Version validation passed for $SELECTED_BRANCH branch - alpha pre-release: $GENERATED_VERSION"
+
           else
-            echo "ℹ️ Custom branch detected - skipping specific format validation"
+            echo "ℹ️ Custom branch '$SELECTED_BRANCH' detected - skipping pre-release label validation"
+            echo "✅ SemVer format validation passed: $GENERATED_VERSION"
           fi
 
       - name: Validate manual tag and compare with GitVersion
