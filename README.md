@@ -7,8 +7,7 @@
 [![NuGet](https://img.shields.io/nuget/v/EnvoyConfig)](https://www.nuget.org/packages/EnvoyConfig)
 [![License: LGPL-3.0-or-later](https://img.shields.io/badge/license-LGPL--3.0--or--later-blue.svg)](LICENSE)
 [![GitHub Copilot](https://img.shields.io/badge/GitHub-Copilot-blue?logo=github)](https://github.com/features/copilot)
-[![Built with Claude](https://img.shields.io/badge/Built_with-Claude-8A2BE2)](https://claude.ai)
-[![Status: Pre-Release](https://img.shields.io/badge/Status-Beta-yellow)](https://github.com/metaneutrons/EnvoyConfig/releases)
+[![Status: Release](https://img.shields.io/badge/Status-Release-cyan)](https://github.com/metaneutrons/EnvoyConfig/releases)
 
 **EnvoyConfig** is a modern C# library for .NET 8+ that loads strongly-typed configuration objects from environment variables at runtime using reflection. It supports advanced attribute-based mapping, type safety, nested objects, lists, dictionaries, and flexible prefixing—all with minimal boilerplate.
 
