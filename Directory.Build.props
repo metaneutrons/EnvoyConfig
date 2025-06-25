@@ -27,7 +27,7 @@
     <Authors>Fabian Schmieder</Authors>
     <Company>metaneutrons</Company>
     <Copyright>Copyright © $([System.DateTime]::Now.Year) Fabian Schmieder</Copyright>
-    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <NeutralLanguage>en</NeutralLanguage>
     <RepositoryUrl>https://github.com/metaneutrons/EnvoyConfig</RepositoryUrl>

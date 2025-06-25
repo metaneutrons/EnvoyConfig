@@ -1,8 +1,8 @@
 #!/usr/bin/env pwsh
 # Pre-commit hook for EnvoyConfig
 
-# Verify that all files have GPL-3.0 headers
-Write-Host "📝 Checking for GPL-3.0 headers..." -ForegroundColor Cyan
+# Verify that all files have LGPL-3.0 headers
+Write-Host "📝 Checking for LGPL-3.0 headers..." -ForegroundColor Cyan
 $missingHeaders = Get-ChildItem -Path ./EnvoyConfig -Include *.cs -Recurse -File |
 Where-Object { $_.FullName -notlike "*/obj/*" -and $_.FullName -notlike "*/bin/*" } |
 Where-Object { $_.Name -ne "EnvoyConfig.AssemblyInfo.cs" -and $_.Name -ne "EnvoyConfig.GlobalUsings.g.cs" } |
@@ -10,10 +10,10 @@ Where-Object { (Get-Content $_.FullName -Raw) -notlike "*GNU General Public Lice
 Select-Object -ExpandProperty FullName
 
 if ($missingHeaders) {
-    Write-Host "❌ ERROR: The following files are missing GPL-3.0 headers:" -ForegroundColor Red
+    Write-Host "❌ ERROR: The following files are missing LGPL-3.0 headers:" -ForegroundColor Red
     $missingHeaders | ForEach-Object { Write-Host "   $_" -ForegroundColor Red }
     Write-Host ""
-    Write-Host "Please add GPL-3.0 headers to these files before committing." -ForegroundColor Red
+    Write-Host "Please add LGPL-3.0 headers to these files before committing." -ForegroundColor Red
     exit 1
 }
 

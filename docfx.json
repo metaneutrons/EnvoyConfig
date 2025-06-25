@@ -59,7 +59,7 @@
       "_appFaviconPath": "assets/favicon.svg",
       "_appLogoPath": "assets/logo.svg",
       "_appFooter": "<strong>DocFX + Singulink = ♥</strong>",
-      "_copyrightFooter": "© Fabian Schmieder. Licensed under GPL3",
+      "_copyrightFooter": "© Fabian Schmieder. Licensed under LGPL3",
       "_enableSearch": true,
       "_disableSideFilter": false,
       "_enableNewTab": true,

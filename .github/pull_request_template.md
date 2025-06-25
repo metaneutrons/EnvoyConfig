@@ -2,6 +2,7 @@
 <!-- Please provide a clear and concise description of the changes in this PR -->
 
 ## Type of change
+
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
@@ -19,6 +20,7 @@
 <!-- If no tests were added/modified, please explain why -->
 
 ## Checklist
+
 - [ ] My code follows the style guidelines of this project (StyleCop rules)
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented complex code sections, particularly in hard-to-understand areas
@@ -27,7 +29,7 @@
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] I have updated the version number if this is a breaking change (major) or adds new functionality (minor)
-- [ ] I have included GPL-3.0 license headers on any new files
+- [ ] I have included LGPL-3.0 license headers on any new files
 
 ## API Changes
 <!-- If your changes affect the public API, please detail them here -->
