@@ -49,20 +49,20 @@ public class AppConfig
 // Result: LogLevel.Debug
 ```
 
-### Enhanced Enum with EnvValue Attribute
+### Enhanced Enum with EnvoyConfigValue Attribute
 
-Use the `[EnvValue]` attribute to define custom string mappings:
+Use the `[EnvoyConfigValue]` attribute to define custom string mappings:
 
 ```csharp
 public enum TranscodingFormat
 {
-    [EnvValue("off", "disabled", "none")]
+    [EnvoyConfigValue("off", "disabled", "none")]
     Disabled,
     
-    [EnvValue("mp3")]
+    [EnvoyConfigValue("mp3")]
     Mp3,
     
-    [EnvValue("ogg", "vorbis")]
+    [EnvoyConfigValue("ogg", "vorbis")]
     Ogg,
     
     Flac // No attribute - uses standard enum parsing
@@ -70,7 +70,7 @@ public enum TranscodingFormat
 
 public class AudioConfig
 {
-    [Env("TRANSCODING_FORMAT")]
+    [EnvoyConfig("TRANSCODING_FORMAT")]
     public TranscodingFormat Format { get; set; }
 }
 ```
@@ -95,7 +95,7 @@ TRANSCODING_FORMAT=Flac
 
 ### Serialization Behavior
 
-When saving configurations using `EnvConfig.Save()`, the first value from the `[EnvValue]` attribute is used:
+When saving configurations using `EnvConfig.Save()`, the first value from the `[EnvoyConfigValue]` attribute is used:
 
 ```csharp
 var config = new AudioConfig { Format = TranscodingFormat.Disabled };
@@ -106,7 +106,7 @@ EnvConfig.Save(config, "config.env");
 ### Fallback Behavior
 
 The enum parsing follows this priority order:
-1. **EnvValue attribute mapping** (case-insensitive)
+1. **EnvoyConfigValue attribute mapping** (case-insensitive)
 2. **Standard enum name parsing** (case-insensitive)
 3. **Conversion error** (logged or thrown based on `ThrowOnConversionError` setting)
 
@@ -186,7 +186,7 @@ TypeConverterRegistry.RegisterConverter(typeof(Point), new PointConverter());
 // it will use your PointConverter.
 public class MyConfig
 {
-    [Env("APP_START_POINT")]
+    [EnvoyConfig("APP_START_POINT")]
     public Point StartPoint { get; set; }
 }
 

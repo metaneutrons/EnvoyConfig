@@ -13,7 +13,7 @@ namespace EnvoyConfig.Internal;
 public static class ReflectionHelper
 {
     private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
-    private static readonly ConcurrentDictionary<Type, List<(PropertyInfo, EnvAttribute)>> _envPropCache = new();
+    private static readonly ConcurrentDictionary<Type, List<(PropertyInfo, EnvoyConfigAttribute)>> _envPropCache = new();
 
     /// <summary>
     /// Populates an instance of type T from environment variables, using EnvAttribute metadata.
@@ -36,7 +36,7 @@ public static class ReflectionHelper
             type,
             t =>
                 props
-                    .Select(p => (p, attr: p.GetCustomAttribute<EnvAttribute>()))
+                    .Select(p => (p, attr: p.GetCustomAttribute<EnvoyConfigAttribute>() ?? (EnvoyConfigAttribute?)p.GetCustomAttribute<EnvAttribute>()))
                     .Where(x => x.attr != null)
                     .Select(x => (x.p, x.attr!))
                     .ToList()
@@ -280,13 +280,13 @@ public static class ReflectionHelper
 
             if (type.IsEnum && !string.IsNullOrEmpty(str))
             {
-                // First try EnvValueAttribute mapping
+                // First try EnvoyConfigValueAttribute or EnvValueAttribute mapping
                 foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static))
                 {
-                    var envValueAttr = field.GetCustomAttribute<EnvValueAttribute>();
-                    if (envValueAttr != null)
+                    var envoyConfigValueAttr = field.GetCustomAttribute<EnvoyConfigValueAttribute>();
+                    if (envoyConfigValueAttr != null)
                     {
-                        foreach (var value in envValueAttr.Values)
+                        foreach (var value in envoyConfigValueAttr.Values)
                         {
                             if (string.Equals(str, value, StringComparison.OrdinalIgnoreCase))
                             {
@@ -345,7 +345,7 @@ public static class ReflectionHelper
 
     private static object? HandleDirectKeyProperty(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         IEnvLogSink? logger,
         string globalPrefix,
         Dictionary<string, string>? variables
@@ -390,7 +390,7 @@ public static class ReflectionHelper
 
     private static object? HandleCommaSeparatedListProperty(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         IEnvLogSink? logger,
         string globalPrefix,
         Dictionary<string, string>? variables
@@ -415,7 +415,7 @@ public static class ReflectionHelper
 
     private static object? HandleNumberedListProperty(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         IEnvLogSink? logger,
         string globalPrefix
     )
@@ -425,7 +425,7 @@ public static class ReflectionHelper
 
     private static object? HandleMapProperty(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         IEnvLogSink? logger,
         string globalPrefix
     )
@@ -435,7 +435,7 @@ public static class ReflectionHelper
 
     private static object? HandleNestedObjectProperty(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         IEnvLogSink? logger,
         string globalPrefix
     )
@@ -449,7 +449,7 @@ public static class ReflectionHelper
 
     private static object? HandleNestedListProperty(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         IEnvLogSink? logger,
         string globalPrefix
     )
@@ -594,7 +594,7 @@ public static class ReflectionHelper
     }
 
     // Helper for parsing a list of nested objects from env vars with numbered prefixes
-    internal static object? ParseNestedList(string globalPrefix, EnvAttribute attr, Type listType, IEnvLogSink? logger) // Made internal for potential testing, was private
+    internal static object? ParseNestedList(string globalPrefix, EnvoyConfigAttribute attr, Type listType, IEnvLogSink? logger) // Made internal for potential testing, was private
     {
         // Only works for List<T>
         if (!listType.IsGenericType || listType.GetGenericTypeDefinition() != typeof(List<>))
@@ -692,7 +692,7 @@ public static class ReflectionHelper
             type,
             t =>
                 props
-                    .Select(p => (p, attr: p.GetCustomAttribute<EnvAttribute>()))
+                    .Select(p => (p, attr: p.GetCustomAttribute<EnvoyConfigAttribute>() ?? (EnvoyConfigAttribute?)p.GetCustomAttribute<EnvAttribute>()))
                     .Where(x => x.attr != null)
                     .Select(x => (x.p, x.attr!))
                     .ToList()
@@ -771,7 +771,7 @@ public static class ReflectionHelper
 
     private static List<EnvVariable> HandleDirectKeySerialization(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         object? instance,
         string globalPrefix,
         bool useDefaults,
@@ -807,7 +807,7 @@ public static class ReflectionHelper
 
     private static List<EnvVariable> HandleCommaSeparatedListSerialization(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         object? instance,
         string globalPrefix,
         bool useDefaults,
@@ -855,7 +855,7 @@ public static class ReflectionHelper
 
     private static List<EnvVariable> HandleNumberedListSerialization(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         object? instance,
         string globalPrefix,
         bool useDefaults,
@@ -919,7 +919,7 @@ public static class ReflectionHelper
 
     private static List<EnvVariable> HandleMapSerialization(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         object? instance,
         string globalPrefix,
         bool useDefaults,
@@ -984,7 +984,7 @@ public static class ReflectionHelper
 
     private static List<EnvVariable> HandleNestedObjectSerialization(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         object? instance,
         string globalPrefix,
         bool useDefaults,
@@ -1039,7 +1039,7 @@ public static class ReflectionHelper
 
     private static List<EnvVariable> HandleNestedListSerialization(
         PropertyInfo prop,
-        EnvAttribute attr,
+        EnvoyConfigAttribute attr,
         object? instance,
         string globalPrefix,
         bool useDefaults,
@@ -1172,12 +1172,12 @@ public static class ReflectionHelper
 
         if (type.IsEnum)
         {
-            // Check if the enum field has EnvValueAttribute and use the first value
+            // Check if the enum field has EnvoyConfigValueAttribute or EnvValueAttribute and use the first value
             var field = type.GetField(value.ToString()!);
-            var envValueAttr = field?.GetCustomAttribute<EnvValueAttribute>();
-            if (envValueAttr != null && envValueAttr.Values.Length > 0)
+            var envoyConfigValueAttr = field?.GetCustomAttribute<EnvoyConfigValueAttribute>();
+            if (envoyConfigValueAttr != null && envoyConfigValueAttr.Values.Length > 0)
             {
-                return envValueAttr.Values[0];
+                return envoyConfigValueAttr.Values[0];
             }
             return value.ToString();
         }

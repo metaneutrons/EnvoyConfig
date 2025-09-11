@@ -7,13 +7,13 @@ public class EnumValueAttributeTests
 {
     public enum TranscodingFormat
     {
-        [EnvValue("off", "disabled", "none")]
+        [EnvoyConfigValue("off", "disabled", "none")]
         Disabled,
         
-        [EnvValue("mp3")]
+        [EnvoyConfigValue("mp3")]
         Mp3,
         
-        [EnvValue("ogg", "vorbis")]
+        [EnvoyConfigValue("ogg", "vorbis")]
         Ogg,
         
         Flac // No attribute - should use standard parsing
@@ -21,12 +21,12 @@ public class EnumValueAttributeTests
 
     public class TestConfig
     {
-        [Env(Key = "TRANSCODING_FORMAT")]
+        [EnvoyConfig(Key = "TRANSCODING_FORMAT")]
         public TranscodingFormat Format { get; set; }
     }
 
     [Fact]
-    public void EnvValueAttribute_ParsesCorrectly()
+    public void EnvoyConfigValue_ParsesCorrectly()
     {
         Environment.SetEnvironmentVariable("TRANSCODING_FORMAT", "disabled");
         var config = EnvConfig.Load<TestConfig>();
@@ -50,13 +50,39 @@ public class EnumValueAttributeTests
     }
 
     [Fact]
-    public void EnvValueAttribute_SerializesCorrectly()
+    public void EnvoyConfigValue_SerializesCorrectly()
     {
         var config = new TestConfig { Format = TranscodingFormat.Disabled };
         var variables = EnvConfig.GetEnvironmentVariables(config);
         
         var formatVar = variables.FirstOrDefault(v => v.Key == "TRANSCODING_FORMAT");
         Assert.NotNull(formatVar);
-        Assert.Equal("off", formatVar.Value); // Should use first EnvValue
+        Assert.Equal("off", formatVar.Value); // Should use first EnvoyConfigValue
+    }
+
+    // Test backward compatibility with old attributes
+    public enum LegacyFormat
+    {
+        [EnvValue("legacy1", "legacy2")]
+        Legacy,
+        
+        Standard
+    }
+
+    public class LegacyTestConfig
+    {
+        [Env(Key = "LEGACY_FORMAT")]
+        public LegacyFormat Format { get; set; }
+    }
+
+    [Fact]
+    public void LegacyAttributes_StillWork()
+    {
+        Environment.SetEnvironmentVariable("LEGACY_FORMAT", "legacy1");
+        var config = EnvConfig.Load<LegacyTestConfig>();
+        Assert.Equal(LegacyFormat.Legacy, config.Format);
+        
+        // Clean up
+        Environment.SetEnvironmentVariable("LEGACY_FORMAT", null);
     }
 }

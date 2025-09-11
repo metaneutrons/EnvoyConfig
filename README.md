@@ -13,8 +13,8 @@
 
 ## ✨ Features
 
-- Attribute-based configuration: `[Env]` attribute for mapping properties to env vars
-- Enhanced enum support with `[EnvValue]` attribute for custom string mappings
+- Attribute-based configuration: `[EnvoyConfig]` attribute for mapping properties to env vars
+- Enhanced enum support with `[EnvoyConfigValue]` attribute for custom string mappings
 - Supports primitives, enums, nullable types, lists, arrays, dictionaries, and nested objects
 - Multiple initialization modes: direct key, comma-separated/numbered lists, dictionary/map, nested prefix
 - Global/static prefix support
@@ -43,28 +43,28 @@ dotnet add package EnvoyConfig.Adapters.Microsoft  # For Microsoft.Extensions.Lo
 ```csharp
 public class ApiKeyConfig
 {
-    [Env(Key = "PRIMARY")]         // Maps to: MYAPP_API_PRIMARY
+    [EnvoyConfig(Key = "PRIMARY")]         // Maps to: MYAPP_API_PRIMARY
     public string Primary { get; set; } = "";
 
-    [Env(Key = "SECONDARY")]       // Maps to: MYAPP_API_SECONDARY
+    [EnvoyConfig(Key = "SECONDARY")]       // Maps to: MYAPP_API_SECONDARY
     public string Secondary { get; set; } = "";
 
-    [Env(Key = "ENABLED", Default = true)]  // Maps to: MYAPP_API_ENABLED
+    [EnvoyConfig(Key = "ENABLED", Default = true)]  // Maps to: MYAPP_API_ENABLED
     public bool Enabled { get; set; }
 }
 
 public class MyConfig
 {
-    [Env(Key = "PORT", Default = 8080)]    // Maps to: MYAPP_PORT
+    [EnvoyConfig(Key = "PORT", Default = 8080)]    // Maps to: MYAPP_PORT
     public int Port { get; set; }
 
-    [Env(Key = "FEATURES", IsList = true)] // Maps to: MYAPP_FEATURES (comma-separated)
+    [EnvoyConfig(Key = "FEATURES", IsList = true)] // Maps to: MYAPP_FEATURES (comma-separated)
     public List<string> Features { get; set; } = new();
 
-    [Env(NestedPrefix = "API_")]           // Maps to: MYAPP_API_* (nested object)
+    [EnvoyConfig(NestedPrefix = "API_")]           // Maps to: MYAPP_API_* (nested object)
     public ApiKeyConfig ApiKeys { get; set; } = new();
 
-    [Env(ListPrefix = "SERVER_")]          // Maps to: MYAPP_SERVER_1, MYAPP_SERVER_2, etc.
+    [EnvoyConfig(ListPrefix = "SERVER_")]          // Maps to: MYAPP_SERVER_1, MYAPP_SERVER_2, etc.
     public List<string> Servers { get; set; } = new();
 }
 
@@ -97,18 +97,18 @@ MYAPP_SERVER_2=backup.example.com
 
 ### Enhanced Enum Support
 
-EnvoyConfig provides enhanced enum support with the `[EnvValue]` attribute, allowing you to map custom string values to enum members:
+EnvoyConfig provides enhanced enum support with the `[EnvoyConfigValue]` attribute, allowing you to map custom string values to enum members:
 
 ```csharp
 public enum TranscodingFormat
 {
-    [EnvValue("off", "disabled", "none")]
+    [EnvoyConfigValue("off", "disabled", "none")]
     Disabled,
     
-    [EnvValue("mp3")]
+    [EnvoyConfigValue("mp3")]
     Mp3,
     
-    [EnvValue("ogg", "vorbis")]
+    [EnvoyConfigValue("ogg", "vorbis")]
     Ogg,
     
     Flac // No attribute - uses standard enum parsing
@@ -116,7 +116,7 @@ public enum TranscodingFormat
 
 public class AudioConfig
 {
-    [Env(Key = "TRANSCODING_FORMAT", Default = TranscodingFormat.Disabled)]
+    [EnvoyConfig(Key = "TRANSCODING_FORMAT", Default = TranscodingFormat.Disabled)]
     public TranscodingFormat Format { get; set; }
 }
 ```
@@ -139,7 +139,7 @@ MYAPP_TRANSCODING_FORMAT=vorbis
 MYAPP_TRANSCODING_FORMAT=Flac
 ```
 
-When saving configurations, the first value from the `[EnvValue]` attribute is used:
+When saving configurations, the first value from the `[EnvoyConfigValue]` attribute is used:
 ```csharp
 var config = new AudioConfig { Format = TranscodingFormat.Disabled };
 EnvConfig.Save(config, "config.env");
@@ -150,11 +150,11 @@ EnvConfig.Save(config, "config.env");
 
 - **Prefix Handling:** Set `EnvConfig.GlobalPrefix` to prepend to all lookups.
 - **Attribute Modes:**
-  - `[Env(Key = "FOO")]` (direct key)
-  - `[Env(Key = "BAR", IsList = true)]` (comma-separated list)
-  - `[Env(ListPrefix = "ITEM_")]` (numbered list: ITEM_1, ITEM_2, ...)
-  - `[Env(MapPrefix = "MAP_")]` (dictionary: MAP_key1=val1, MAP_key2=val2)
-  - `[Env(NestedPrefix = "DB_")]` (nested object)
+  - `[EnvoyConfig(Key = "FOO")]` (direct key)
+  - `[EnvoyConfig(Key = "BAR", IsList = true)]` (comma-separated list)
+  - `[EnvoyConfig(ListPrefix = "ITEM_")]` (numbered list: ITEM_1, ITEM_2, ...)
+  - `[EnvoyConfig(MapPrefix = "MAP_")]` (dictionary: MAP_key1=val1, MAP_key2=val2)
+  - `[EnvoyConfig(NestedPrefix = "DB_")]` (nested object)
 - **Supported Types:** Primitives (string, int, bool, double, etc.), `DateTime`, `TimeSpan`, `Guid`, enums, nullable types, List<T>, T[], Dictionary<TKey,TValue>. Custom types can be supported via `ITypeConverter`.
 - **Logging:** Pass a custom logger (`IEnvLogSink`) or use an adapter for your framework.
 - **Custom Type Converters:** Implement `ITypeConverter` and register with `TypeConverterRegistry.RegisterConverter()` to handle custom string-to-type conversions.
@@ -226,7 +226,7 @@ Control how EnvoyConfig behaves when a type conversion from a string environment
 - **Type conversion errors:** Check environment variable values and target property types. If `EnvConfig.ThrowOnConversionError` is `false` (default), check logs for details and verify if the property has its default C# value. If `true`, an exception will be thrown.
 - **Missing env vars:** Use `Default` attribute property or handle `null`/default values in your application logic.
 - **Prefix confusion:** Ensure `GlobalPrefix` and attribute keys/prefixes are set as intended.
-- **Enum parsing:** Use `[EnvValue]` attribute for custom string mappings, or rely on standard case-insensitive enum name parsing.
+- **Enum parsing:** Use `[EnvoyConfigValue]` attribute for custom string mappings, or rely on standard case-insensitive enum name parsing.
 - **Logging:** Implement `IEnvLogSink` or use provided adapters for structured logs, especially to diagnose conversion issues when `ThrowOnConversionError` is `false`.
 
 ## 🤝 Contributing
