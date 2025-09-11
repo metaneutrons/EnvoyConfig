@@ -22,6 +22,8 @@
 - Thread-safe, high performance (caching)
 - Zero external dependencies in core
 
+> ⚠️ **Deprecation Notice**: The old `[Env]` and `[EnvValue]` attributes are deprecated and will be removed in the coming months. Please migrate to `[EnvoyConfig]` and `[EnvoyConfigValue]` respectively. The old attributes currently show compiler warnings to guide the migration.
+
 ## 📚 Documentation
 
 See here for [Documentation](https://metaneutrons.github.io/EnvoyConfig).
