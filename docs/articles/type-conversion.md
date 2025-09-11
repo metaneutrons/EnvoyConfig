@@ -11,7 +11,7 @@ EnvoyConfig attempts to convert the string values from environment variables to 
 * `DateTime`, `DateTimeOffset`, `TimeSpan` (using standard parsing rules)
 * `Uri`
 * `Guid`
-* `Enum` types (case-insensitive string matching to enum value names)
+* `Enum` types (case-insensitive string matching to enum value names, with enhanced support via `[EnvValue]` attribute)
 * `List<T>` (where T is one of the above simple types, for the `List` strategy)
 * `Dictionary<string, string>` (for the `KeyValue` strategy)
 
@@ -21,6 +21,94 @@ By default, if a conversion fails (e.g., trying to parse "abc" as an `int`), Env
 You can change this behavior by setting the static property `EnvConfig.ThrowOnConversionError = true;`. If set to `true`, `EnvConfig.Load<T>()` will throw an `InvalidOperationException` when a type conversion error occurs. This allows for stricter error handling if desired. See the "Validation & Error Handling" article for more details on this property.
 
 Ensure you have appropriate error handling (like a `try-catch` block around `EnvConfig.Load<T>()`) if you enable `ThrowOnConversionError` or if you need to handle other potential loading issues.
+
+## Enhanced Enum Support
+
+EnvoyConfig provides enhanced enum support through the `[EnvValue]` attribute, allowing you to map custom string values to enum members. This is particularly useful when you want to accept user-friendly or alternative string representations for enum values.
+
+### Basic Enum Usage
+
+Without any attributes, enums work with standard case-insensitive name matching:
+
+```csharp
+public enum LogLevel
+{
+    Debug,
+    Info,
+    Warning,
+    Error
+}
+
+public class AppConfig
+{
+    [Env("LOG_LEVEL")]
+    public LogLevel Level { get; set; }
+}
+
+// Environment: LOG_LEVEL=debug (case-insensitive)
+// Result: LogLevel.Debug
+```
+
+### Enhanced Enum with EnvValue Attribute
+
+Use the `[EnvValue]` attribute to define custom string mappings:
+
+```csharp
+public enum TranscodingFormat
+{
+    [EnvValue("off", "disabled", "none")]
+    Disabled,
+    
+    [EnvValue("mp3")]
+    Mp3,
+    
+    [EnvValue("ogg", "vorbis")]
+    Ogg,
+    
+    Flac // No attribute - uses standard enum parsing
+}
+
+public class AudioConfig
+{
+    [Env("TRANSCODING_FORMAT")]
+    public TranscodingFormat Format { get; set; }
+}
+```
+
+**Supported Environment Values:**
+```bash
+# Any of these map to TranscodingFormat.Disabled
+TRANSCODING_FORMAT=off
+TRANSCODING_FORMAT=disabled  
+TRANSCODING_FORMAT=none
+
+# This maps to TranscodingFormat.Mp3
+TRANSCODING_FORMAT=mp3
+
+# Either of these map to TranscodingFormat.Ogg
+TRANSCODING_FORMAT=ogg
+TRANSCODING_FORMAT=vorbis
+
+# Standard enum parsing still works
+TRANSCODING_FORMAT=Flac
+```
+
+### Serialization Behavior
+
+When saving configurations using `EnvConfig.Save()`, the first value from the `[EnvValue]` attribute is used:
+
+```csharp
+var config = new AudioConfig { Format = TranscodingFormat.Disabled };
+EnvConfig.Save(config, "config.env");
+// Output: TRANSCODING_FORMAT=off
+```
+
+### Fallback Behavior
+
+The enum parsing follows this priority order:
+1. **EnvValue attribute mapping** (case-insensitive)
+2. **Standard enum name parsing** (case-insensitive)
+3. **Conversion error** (logged or thrown based on `ThrowOnConversionError` setting)
 
 ## Custom Type Converters
 

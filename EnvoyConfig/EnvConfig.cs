@@ -1,5 +1,6 @@
 using EnvoyConfig.Internal;
 using EnvoyConfig.Logging;
+using static EnvoyConfig.Internal.ReflectionHelper;
 
 namespace EnvoyConfig;
 
@@ -58,6 +59,36 @@ public static class EnvConfig
     /// </example>
     public static T Load<T>(IEnvLogSink? logger = null)
         where T : new() => ReflectionHelper.PopulateInstance<T>(logger ?? Logger, GlobalPrefix);
+
+    /// <summary>
+    /// Gets the environment variables that would be generated for the specified configuration instance.
+    /// </summary>
+    /// <typeparam name="T">The type of the configuration class.</typeparam>
+    /// <param name="instance">The configuration instance to serialize.</param>
+    /// <param name="logger">Optional logger for warnings and errors.</param>
+    /// <returns>A list of environment variables with their keys and values.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if instance is null.</exception>
+    /// <remarks>
+    /// This method uses reflection to find properties marked with the <see cref="Attributes.EnvAttribute"/>.
+    /// The GlobalPrefix is automatically applied to all variable names.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var config = new AppSettings { Port = 8080 };
+    /// var variables = EnvConfig.GetEnvironmentVariables(config);
+    /// foreach (var variable in variables)
+    /// {
+    ///     Console.WriteLine($"{variable.Key}={variable.Value}");
+    /// }
+    /// </code>
+    /// </example>
+    public static List<EnvVariable> GetEnvironmentVariables<T>(T instance, IEnvLogSink? logger = null)
+    {
+        if (instance == null)
+            throw new ArgumentNullException(nameof(instance));
+
+        return ReflectionHelper.SerializeToEnv(instance, GlobalPrefix, useDefaults: false);
+    }
 
     /// <summary>
     /// Saves the current configuration values to a .env file.

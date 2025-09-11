@@ -280,6 +280,23 @@ public static class ReflectionHelper
 
             if (type.IsEnum && !string.IsNullOrEmpty(str))
             {
+                // First try EnvValueAttribute mapping
+                foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static))
+                {
+                    var envValueAttr = field.GetCustomAttribute<EnvValueAttribute>();
+                    if (envValueAttr != null)
+                    {
+                        foreach (var value in envValueAttr.Values)
+                        {
+                            if (string.Equals(str, value, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return Enum.Parse(type, field.Name);
+                            }
+                        }
+                    }
+                }
+
+                // Fallback to standard enum parsing
                 if (!Enum.TryParse(type, str, true, out var e))
                 {
                     var errorMsg = $"Failed to convert '{envKey}' value '{str}' to enum type {type.Name}";
@@ -622,7 +639,7 @@ public static class ReflectionHelper
     /// <summary>
     /// Represents an environment variable entry for .env file generation.
     /// </summary>
-    private class EnvVariable
+    public class EnvVariable
     {
         public string Key { get; set; } = null!;
         public string? Value { get; set; }
@@ -667,7 +684,7 @@ public static class ReflectionHelper
     /// <param name="globalPrefix">The global prefix to apply.</param>
     /// <param name="useDefaults">Whether to use default values.</param>
     /// <returns>List of environment variables.</returns>
-    private static List<EnvVariable> SerializeToEnv<T>(T? instance, string globalPrefix, bool useDefaults)
+    public static List<EnvVariable> SerializeToEnv<T>(T? instance, string globalPrefix, bool useDefaults)
     {
         var type = typeof(T);
         var props = _propertyCache.GetOrAdd(type, t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance));
@@ -1154,7 +1171,16 @@ public static class ReflectionHelper
             return value.ToString()?.ToLowerInvariant();
 
         if (type.IsEnum)
+        {
+            // Check if the enum field has EnvValueAttribute and use the first value
+            var field = type.GetField(value.ToString()!);
+            var envValueAttr = field?.GetCustomAttribute<EnvValueAttribute>();
+            if (envValueAttr != null && envValueAttr.Values.Length > 0)
+            {
+                return envValueAttr.Values[0];
+            }
             return value.ToString();
+        }
 
         return value.ToString();
     }

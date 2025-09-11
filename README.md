@@ -14,6 +14,7 @@
 ## ✨ Features
 
 - Attribute-based configuration: `[Env]` attribute for mapping properties to env vars
+- Enhanced enum support with `[EnvValue]` attribute for custom string mappings
 - Supports primitives, enums, nullable types, lists, arrays, dictionaries, and nested objects
 - Multiple initialization modes: direct key, comma-separated/numbered lists, dictionary/map, nested prefix
 - Global/static prefix support
@@ -94,6 +95,59 @@ MYAPP_SERVER_2=backup.example.com
 
 ## 🔧 Advanced Usage & Features
 
+### Enhanced Enum Support
+
+EnvoyConfig provides enhanced enum support with the `[EnvValue]` attribute, allowing you to map custom string values to enum members:
+
+```csharp
+public enum TranscodingFormat
+{
+    [EnvValue("off", "disabled", "none")]
+    Disabled,
+    
+    [EnvValue("mp3")]
+    Mp3,
+    
+    [EnvValue("ogg", "vorbis")]
+    Ogg,
+    
+    Flac // No attribute - uses standard enum parsing
+}
+
+public class AudioConfig
+{
+    [Env(Key = "TRANSCODING_FORMAT", Default = TranscodingFormat.Disabled)]
+    public TranscodingFormat Format { get; set; }
+}
+```
+
+**Environment Variables:**
+```bash
+# Any of these values will map to TranscodingFormat.Disabled
+MYAPP_TRANSCODING_FORMAT=off
+MYAPP_TRANSCODING_FORMAT=disabled
+MYAPP_TRANSCODING_FORMAT=none
+
+# This maps to TranscodingFormat.Mp3
+MYAPP_TRANSCODING_FORMAT=mp3
+
+# Either of these map to TranscodingFormat.Ogg
+MYAPP_TRANSCODING_FORMAT=ogg
+MYAPP_TRANSCODING_FORMAT=vorbis
+
+# Standard enum parsing still works
+MYAPP_TRANSCODING_FORMAT=Flac
+```
+
+When saving configurations, the first value from the `[EnvValue]` attribute is used:
+```csharp
+var config = new AudioConfig { Format = TranscodingFormat.Disabled };
+EnvConfig.Save(config, "config.env");
+// Outputs: MYAPP_TRANSCODING_FORMAT=off
+```
+
+### Other Advanced Features
+
 - **Prefix Handling:** Set `EnvConfig.GlobalPrefix` to prepend to all lookups.
 - **Attribute Modes:**
   - `[Env(Key = "FOO")]` (direct key)
@@ -172,6 +226,7 @@ Control how EnvoyConfig behaves when a type conversion from a string environment
 - **Type conversion errors:** Check environment variable values and target property types. If `EnvConfig.ThrowOnConversionError` is `false` (default), check logs for details and verify if the property has its default C# value. If `true`, an exception will be thrown.
 - **Missing env vars:** Use `Default` attribute property or handle `null`/default values in your application logic.
 - **Prefix confusion:** Ensure `GlobalPrefix` and attribute keys/prefixes are set as intended.
+- **Enum parsing:** Use `[EnvValue]` attribute for custom string mappings, or rely on standard case-insensitive enum name parsing.
 - **Logging:** Implement `IEnvLogSink` or use provided adapters for structured logs, especially to diagnose conversion issues when `ThrowOnConversionError` is `false`.
 
 ## 🤝 Contributing
